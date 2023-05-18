@@ -1,0 +1,37 @@
+-存储数据
+-元数据提取--单词列表
+-搜索
+
+·存储结构：
+
+CRUD
+
+-index- 
+-tag- one word (search by capital letter)
+-name- 
+-detail- 
+-date and time- 
+-source-
+[中文名] 名称 [年份] [剪辑版本] [发布说明] 分辨率 来源 [音频/]视频编码-发布组名称
+
+Index
+
+Name Year Edited_Version Release_Note Resolution Source Audio_Encoding Video_Encoding Team Subtitles Format Language Country Release_Date Rate
+列表 列表   列表          NaN          列表        NaN    列表            列表          列表  NaN       列表    列表     列表    列表         排序
+
+tags -> index
+
+metadata:
+  empty index
+  name
+  Year
+  edit_version
+  resolution
+  audio_encoding
+  video_encoding
+  team
+  format
+  language
+  country
+  release_date
+  rate
