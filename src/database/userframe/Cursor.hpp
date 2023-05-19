@@ -1,8 +1,7 @@
-#ifndef Cursor_hpp
-#define Cursor_hpp
+#pragma once
 
 #include "./Table.hpp"
-#include<string_view>
+#include "./Deleted.hpp"
 
 class Cursor : Table{
 private:
@@ -32,5 +31,3 @@ public:
 
     void next();
 };
-
-#endif

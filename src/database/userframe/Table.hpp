@@ -2,7 +2,6 @@
 #define Table_hpp
 
 #include "./Pager.hpp"
-#include <string_view>
 
 class Table : Pager {
 
@@ -22,7 +21,7 @@ public:
 
     void push_back(const Row& row);
 
-    uint32_t getSum();
+    uint32_t getSum() {return num_rows;}
 
 };
 #endif

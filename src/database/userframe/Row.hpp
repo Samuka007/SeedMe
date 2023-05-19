@@ -2,14 +2,15 @@
 #define Row_hpp
 
 #include<cstring>
+#include<string_view>
 
 constexpr size_t LENGTH_OF_NAME   = 32;
 constexpr size_t LENGTH_OF_PASSWORD = 64;
 constexpr size_t MAX_OWN_SOURCE = 384;
 
 template<typename Struct, typename Attribute>
-constexpr uint32_t size_of_attribute() {
-    return sizeof(decltype(std::declval<Struct*>()->Attribute));
+constexpr uint32_t size_of_attribute(Attribute Struct::*attribute) {
+    return sizeof(Struct.*attribute);
 }
 
 constexpr uint32_t ID_SIZE = size_of_attribute(&Row::ID);
@@ -31,7 +32,12 @@ private:
     uint32_t  Source[MAX_OWN_SOURCE];
     //uint8_t Rate;
 public:
-    Row();
+    Row()=default;
+    Row(uint32_t id, std::string_view name, std::string_view password)
+    :   ID(id), 
+        Name(name.substr(0,LENGTH_OF_NAME-1).data()), 
+        Password(password.substr(0,LENGTH_OF_PASSWORD-1).data()) 
+    {}
 
     uint32_t getID() { return ID;}
     char* getName() { return Name;}

@@ -1,12 +1,5 @@
 #include"Row.hpp"
 
-Row::Row(){
-    ID = 0;
-    Name[0] = '\0';
-    Password[0] = '\0';
-    Source[0] = 0;
-}
-
 void Row::serialize(void* destination) {
     std::memcpy(static_cast<char*>(destination) + ID_OFFSET, this -> ID, ID_SIZE);
     std::memcpy(static_cast<char*>(destination) + NAME_OFFSET, this -> Name, NAME_SIZE);

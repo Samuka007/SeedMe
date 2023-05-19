@@ -5,9 +5,6 @@
 #include "./userframe/UserPre.hpp"
 #include "./metadata/Metadata.hpp"
 
-#include<string>
-#include<string_view>
-
 class SeedDB : DataPre, UserPre, Metadata {
     public:
         SeedDB(std::string filename)
@@ -15,6 +12,26 @@ class SeedDB : DataPre, UserPre, Metadata {
             UserPre(filename+".user"s),
             Metadata(filename+".meta"s)
         {}
+
+        namespace UserControl{
+            void CreateUser();
+
+            void UpdateUser();
+
+            void GetUserSource();
+
+            void DeleteUser();
+        }
+
+        namespace SrcControl{
+            void CreateSource();
+
+            void GetSource();
+
+            void UpdateSource();
+
+            void DeleteSource();
+        }        
 
         /**
         * store

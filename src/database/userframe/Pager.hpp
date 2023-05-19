@@ -1,10 +1,9 @@
 #ifndef Pager_hpp
 #define Pager_hpp
 
-#include<string_view>
+#include <string_view>
 
 #include"./Row.hpp"
-#include"./Table.hpp"
 
 class Pager
 {
