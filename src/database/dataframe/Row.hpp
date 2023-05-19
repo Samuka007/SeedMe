@@ -7,8 +7,8 @@ constexpr size_t LENGTH_OF_NAME   = 160;
 constexpr size_t LENGTH_OF_MAGNET = 64;
 
 template<typename Struct, typename Attribute>
-constexpr uint32_t size_of_attribute() {
-    return sizeof(decltype(std::declval<Struct*>()->Attribute));
+constexpr uint32_t size_of_attribute(Attribute Struct::*attribute) {
+    return sizeof(Struct.*attribute);
 }
 
 constexpr uint32_t ID_SIZE = size_of_attribute(&Row::ID);
@@ -19,6 +19,8 @@ constexpr uint32_t NAME_OFFSET = ID_OFFSET + ID_SIZE;
 constexpr uint32_t MAGNET_OFFSET = NAME_OFFSET + NAME_SIZE;
 constexpr uint32_t ROW_SIZE = ID_SIZE + NAME_SIZE + MAGNET_SIZE;
 
+#include<string_view>
+
 class Row { //32+160+64 = 256
 private:
     uint32_t ID;
@@ -27,6 +29,13 @@ private:
     char Magnet [LENGTH_OF_MAGNET];
     //uint8_t Rate;
 public:
+
+    Row() = default;
+    Row(uint32_t id, std::string_view name, std::string_view magnet)
+    :   ID(id), 
+        Name(name.substr(0,LENGTH_OF_NAME-1).data()), 
+        Magnet(magnet.substr(0,LENGTH_OF_MAGNET-1).data()) 
+    {}
 
     uint32_t getID() { return ID;}
     char* getName() { return Name;}
