@@ -1,20 +1,22 @@
 #ifndef DataPre_hpp
 #define DataPre_hpp
 
-#include "./Cursor.hpp"
-#include "../metadata/Deleted.hpp"
+#include "./SrcRow.hpp"
+#include "../frame/Cursor.hpp"
+#include "../frame/Deleted.hpp"
 
-class DataPre : Cursor, Deleted{
+class DataPre : public Table<SrcRow>, public Deleted{
+public:
     DataPre(std::string_view filename)
-    :   Cursor(filename), Deleted(filename) {}
+    :   Table<SrcRow>(filename), Deleted(filename) {}
 
     void setName(std::string_view name){
-        Cursor::setName(name.substr(0,NAME_SIZE-1).data());
+        __setName(name.substr(0, SrcRow::NAME_SIZE-1).data());
     }
 
     void setMagnet(std::string_view magnet){
         if(magnet.starts_with("magnet:?xt="sv)){
-            Cursor::setMagnet(magnet.substr(0,MAGNET_SIZE-1).data());
+            __setMagnet(magnet.substr(0, SrcRow::MAGNET_SIZE-1).data());
         }
     }
 
@@ -26,14 +28,21 @@ class DataPre : Cursor, Deleted{
         //should do legal check
         uint32_t id = Deleted::get();
         if(id){
-            Row temp(id, name, magnet);
+            SrcRow temp(id, name, magnet);
             temp.serialize(Table::row_slot(id));
             Deleted::erase(id);
         }else{
             id = Table::getSum()+1;
-            Row temp(id, name, magnet);
+            SrcRow temp(id, name, magnet);
             Table::push_back(temp);
         }
         return id;
     }
+    
+    uint32_t    getID(void* cur)        { SrcRow temp; temp.deserialize(cur); return temp.getID();}
+    char*       getName(void* cur)      { SrcRow temp; temp.deserialize(cur); return temp.getName();}
+    char*       getMagnet(void* cur)    { SrcRow temp; temp.deserialize(cur); return temp.getMagnet();}
+
+    void __setName(void* cur, char* name)   { SrcRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
+    void __setMagnet(void* cur, char* mg)   { SrcRow temp; temp.deserialize(cur); temp.setMagnet(mg); temp.serialize(cur); }
 }
