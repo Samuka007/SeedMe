@@ -3,7 +3,7 @@
 
 #include "./dataframe/DataPre.hpp"
 #include "./userframe/UserPre.hpp"
-#include "./metadata/Metadata.hpp"
+#include "./frame/Metadata.hpp"
 
 class SeedDB : DataPre, UserPre, Metadata {
     public:

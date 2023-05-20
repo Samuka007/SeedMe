@@ -13,13 +13,14 @@ Cursor::Cursor(std::string_view filename, bool option)
     }
 }
 
-char* Cursor::getpoint(){
+void* Cursor::getpoint(){
     uint32_t page_num = row_num / ROWS_PER_PAGE;
     auto page = static_cast<char*>(pager.get_page(page_num)/*should add error checking*/);
     uint32_t row_offset = row_num % ROWS_PER_PAGE;
     uint32_t byte_offset = row_offset * ROW_SIZE;
     return page + byte_offset;
 }
+
 
 void Cursor::next(){
     row_num += 1;

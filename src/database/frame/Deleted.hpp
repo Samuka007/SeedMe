@@ -16,11 +16,13 @@ constexpr uint32_t SIZE_OF_LIST = sizeof(uint32_t[LIST_LENGTH]);
 class Deleted{
     private:
         //uint32_t DeletedList[LIST_LENGTH] {0};
+        std::string filename;
 
         std::set<uint32_t> deleted_set;
     
     public:
-        Deleted(std::string filename){
+        Deleted(std::string filename)
+        :   filename(filename) {
             filename += ".deleted";
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
             if(file_d == -1){
@@ -40,7 +42,7 @@ class Deleted{
             deleted_set.insert(buf.begin(), buf.end());
         }
         ~Deleted(){
-            ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
+            ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
             if(file_d == -1){
                 throw "read error.";
             }
