@@ -34,7 +34,6 @@ class Deleted{
             } 
             std::array<uint32_t, LIST_LENGTH> buf;
             if( read(file_d, buf.data(), SIZE_OF_LIST) == -1){
-                free(buf);
                 throw "read list error.";
             }
             

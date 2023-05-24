@@ -103,5 +103,3 @@ Metadata::~Metadata(){
         throw "close error.";
     }
 }
-
-void 
