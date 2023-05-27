@@ -9,8 +9,8 @@ class UserPre : Table<UserRow>, Deleted{
     UserPre(std::string_view filename)
     :   Table<UserRow>(filename), Deleted(filename) {}
 
-    void setUsername(std::string_view name){
-        __setName(name.substr(0, UserRow::NAME_SIZE-1).data());
+    void setUsername(uint32_t id, std::string_view name){
+        __setName(Table::row_data(id), name.substr(0, UserRow::NAME_SIZE-1).data());
     }
 
     void setPassword(std::string_view origin_pw, 

@@ -2,7 +2,7 @@
 #define DataPre_hpp
 
 #include "./SrcRow.hpp"
-#include "../frame/Cursor.hpp"
+#include "../frame/Table.hpp"
 #include "../frame/Deleted.hpp"
 
 class DataPre : public Table<SrcRow>, public Deleted{

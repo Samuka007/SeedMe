@@ -1,4 +1,5 @@
-#pragma once
+#ifndef Deleted_hpp
+#define Deleted_hpp
 
 #include<sys/stat.h>
 #include<sys/types.h>
@@ -78,3 +79,5 @@ class Deleted{
             }
         }
 };
+
+#endif /*Deleted.hpp*/

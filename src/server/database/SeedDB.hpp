@@ -33,6 +33,7 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
             }
             return find;
         }
+
         bool username_exist(std::string_view username){
             bool find = false;
             for(uint32_t i=1;i<this->getSum();++i){
@@ -52,19 +53,22 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
         void CreateUser(
             std::string_view username,
             std::string_view password,
-            std::string_view password_varified){
+            std::string_view password_varified
+        ){
             if(username_exist(username)){
-                //throw error
-                return;
-            }
-            if(password != password_varified){
                 //throw error
                 return;
             }
             UserPre::addUser(username, password);
         }
 
-        void UpdateUser();
+        void UpdateUsername(
+            uint32_t userid,
+            std::string_view username
+        ){
+            UserPre::setUsername(userid, username);
+        }
+
         void GetUserSource();
         void DeleteUser();
         
