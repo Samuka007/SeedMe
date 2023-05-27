@@ -8,7 +8,7 @@
 #include <string_view>
 
 #include "../dataframe/DataPre.hpp"
-
+namespace Meta{
 constexpr uint32_t TAG_LENGTH = 32;
 constexpr uint32_t MAX_TAGMAP_NUM = 1023;
 constexpr uint32_t SIZE_OF_NAME = sizeof(char[TAG_LENGTH]);
@@ -38,5 +38,6 @@ class Metadata {
         void Remove_tag(std::string);
 
 };
-
+}
+using Meta::Metadata;
 #endif

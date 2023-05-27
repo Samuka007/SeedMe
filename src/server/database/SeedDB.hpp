@@ -69,8 +69,13 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
             UserPre::setUsername(userid, username);
         }
 
-        void GetUserSource();
-        void DeleteUser();
+        uint32_t* GetUserSource();
+        
+        void DeleteUser(
+            uint32_t userid
+        ){
+            UserPre::deleteUser(userid);
+        }
         
         /**
          * SourceController:

@@ -6,6 +6,7 @@
 #include "../frame/Deleted.hpp"
 
 class UserPre : Table<UserRow>, Deleted{
+public:
     UserPre(std::string_view filename)
     :   Table<UserRow>(filename), Deleted(filename) {}
 
@@ -39,6 +40,21 @@ class UserPre : Table<UserRow>, Deleted{
             Table::push_back(temp);
         }
         return id;
+    }
+
+    void addSrcID(uint32_t SrcID, uint32_t UserID){
+        void* cur = Table::row_slot(UserID);
+        UserRow temp;
+        temp.deserialize(cur);
+        uint32_t* src = temp.getSource();
+        for(uint32_t i = 0; i<User::MAX_OWN_SOURCE; ++i){
+            if(src[i] != 0){
+                src[i] = SrcID;
+                break;
+            }
+        }
+        temp.setSource(src);
+        temp.serialize(cur);
     }
 
     uint32_t    getUserID(void* cur)     { UserRow temp; temp.deserialize(cur); return temp.getID();}

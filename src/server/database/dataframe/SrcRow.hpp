@@ -3,6 +3,17 @@
 
 #include<string_view>
 
+namespace Src{
+constexpr size_t LENGTH_OF_NAME   = 160;
+constexpr size_t LENGTH_OF_MAGNET = 64;
+constexpr uint32_t ID_SIZE = sizeof(uint32_t);
+constexpr uint32_t NAME_SIZE = sizeof(char[LENGTH_OF_NAME]);
+constexpr uint32_t MAGNET_SIZE = sizeof(char[LENGTH_OF_MAGNET]);
+constexpr uint32_t ID_OFFSET = 0;
+constexpr uint32_t NAME_OFFSET = ID_OFFSET + ID_SIZE;
+constexpr uint32_t MAGNET_OFFSET = NAME_OFFSET + NAME_SIZE;
+constexpr uint32_t ROW_SIZE = ID_SIZE + NAME_SIZE + MAGNET_SIZE;
+
 class SrcRow { //32+160+64 = 256
 public:
     SrcRow() = default;
@@ -23,17 +34,6 @@ public:
     void serialize(void* destination);
     void deserialize(const void* source);
     //TODO: illegal check
-
-    constexpr size_t LENGTH_OF_NAME   = 160;
-    constexpr size_t LENGTH_OF_MAGNET = 64;
-
-    constexpr uint32_t ID_SIZE = sizeof(ID);
-    constexpr uint32_t NAME_SIZE = sizeof(Name);
-    constexpr uint32_t MAGNET_SIZE = sizeof(Magnet);
-    constexpr uint32_t ID_OFFSET = 0;
-    constexpr uint32_t NAME_OFFSET = ID_OFFSET + ID_SIZE;
-    constexpr uint32_t MAGNET_OFFSET = NAME_OFFSET + NAME_SIZE;
-    constexpr uint32_t ROW_SIZE = ID_SIZE + NAME_SIZE + MAGNET_SIZE;
 private:
     uint32_t ID;
 //Metadata:
@@ -41,5 +41,6 @@ private:
     char Magnet [LENGTH_OF_MAGNET];
     //uint8_t Rate;
 };
-
+}
+using Src::SrcRow;
 #endif
