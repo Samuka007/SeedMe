@@ -1,0 +1,2 @@
+/home/samuka/workspace/SeedMe/build/CMakeFiles/edit_cache.dir
+/home/samuka/workspace/SeedMe/build/CMakeFiles/rebuild_cache.dir
