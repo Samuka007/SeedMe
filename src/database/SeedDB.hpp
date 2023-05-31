@@ -6,6 +6,8 @@
 #include "./userframe/UserPre.hpp"
 #include "./frame/Metadata.hpp"
 
+namespace seeddb {
+
 class SeedDB : public DataPre, public UserPre, public Metadata {
     public:
         SeedDB(std::string filename)
@@ -135,4 +137,5 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
         */
 };
 
+}
 #endif

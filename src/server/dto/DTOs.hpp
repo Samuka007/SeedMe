@@ -26,16 +26,21 @@ class UserDto : public oatpp::DTO {
 
   DTO_FIELD(Int32, userId);
   DTO_FIELD(String, userName);
+  DTO_FIELD(String, userPW);
 };
 
 class SrcDto : public oatpp::DTO {
   DTO_INIT(SrcDto, DTO)
 
+  DTO_FIELD(oatpp::Fields<Int32, String>, SrcName);
+  DTO_FIELD(oatpp::Fields<Int32, String>, Magnet);
+};
+
+class OperDto : public oatpp::DTO {
+  DTO_INIT(OperDto, DTO)
+
   DTO_FIELD(Int32, operation);
-  DTO_FIELD(Int32, srcID);
-  DTO_FIELD(String, srcName);
-  DTO_FIELD(String, magnet);
-}
+};
 
 /**
  * - User Operate Api

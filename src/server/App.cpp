@@ -2,9 +2,9 @@
 #include "AppComponent.hpp"
 
 #include "oatpp/network/Server.hpp"
+#include "database/SeedDB.hpp"
 
 void run() {
-
   /* Register Components in scope of run() method */
   AppComponent components;
 
@@ -21,12 +21,15 @@ void run() {
   /* Get connection provider component */
   OATPP_COMPONENT(std::shared_ptr<oatpp::network::ServerConnectionProvider>, connectionProvider);
 
+  OATPP_COMPONENT(std::shared_ptr<std::string>, filename);
+
   /* Create server which takes provided TCP connections and passes them to HTTP connection handler */
   oatpp::network::Server server(connectionProvider, connectionHandler);
 
   /* Priny info about server port */
   OATPP_LOGI("MyApp", "Server running on port %s", connectionProvider->getProperty("port").getData());
 
+  
   /* Run server */
   server.run();
   
