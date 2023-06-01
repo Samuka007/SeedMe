@@ -49,7 +49,9 @@ public:
          PATH(Int64, userId)) {
     //OATPP_LOGD("Test", "userId=%d", userId->getValue());
     //Now here can use userID->getValue()
-
+    auto usrdto = UserDto::createShared();
+    usrdto->userId = userId.getValue();
+    usrdto->userName = 
     return createResponse(Status::CODE_200, "OK");
   }
 
