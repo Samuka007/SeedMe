@@ -19,10 +19,11 @@ class SrcRow : public Row { //32+160+64 = 256
 public:
     SrcRow() = default;
     SrcRow(uint32_t id, std::string_view name, std::string_view magnet)
-    :   ID(id), 
-        Name(name.substr(0,LENGTH_OF_NAME-1).data()), 
-        Magnet(magnet.substr(0,LENGTH_OF_MAGNET-1).data()) 
-    {}
+    :   ID(id)
+    {
+        setName(name.substr(0,LENGTH_OF_NAME-1).data());
+        setMagnet(magnet.substr(0,LENGTH_OF_MAGNET-1).data());
+    }
 
     constexpr uint32_t GET_ROW_SIZE() override { return ROW_SIZE;}
 
@@ -31,8 +32,8 @@ public:
     char* getMagnet() { return Magnet;}
 
     void setID(uint32_t id) { ID = id;}
-    void setName(char* name){ std::strcpy(Name, name);}
-    void setMagnet(char* mg){std::strcpy(Magnet, mg);}
+    void setName(const char* name){ std::strcpy(Name, name);}
+    void setMagnet(const char* mg){std::strcpy(Magnet, mg);}
     
     void serialize (void* destination) override;
     void deserialize(const void* source) override;

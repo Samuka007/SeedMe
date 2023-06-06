@@ -8,14 +8,14 @@
 class DataPre : public Table<SrcRow>, public Deleted{
 public:
     DataPre(std::string_view filename)
-    :   Table<SrcRow>(filename), Deleted(filename) {}
+    :   Table<SrcRow>(filename), Deleted(filename.data()) {}
 
     void setName(uint32_t id, std::string_view name){
         __setName(row_data(id), name.substr(0, Src::NAME_SIZE-1).data());
     }
 
     void setMagnet(uint32_t id, std::string_view magnet){
-        if(magnet.starts_with("magnet:?xt="sv)){
+        if(magnet.starts_with("magnet:?xt=")){
             __setMagnet(row_data(id), magnet.substr(0, Src::MAGNET_SIZE-1).data());
         }
     }
@@ -43,6 +43,8 @@ public:
     char*       getName(void* cur)      { SrcRow temp; temp.deserialize(cur); return temp.getName();}
     char*       getMagnet(void* cur)    { SrcRow temp; temp.deserialize(cur); return temp.getMagnet();}
 
-    void __setName(void* cur, char* name)   { SrcRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
-    void __setMagnet(void* cur, char* mg)   { SrcRow temp; temp.deserialize(cur); temp.setMagnet(mg); temp.serialize(cur); }
-}
+    void __setName(void* cur, const char* name)   { SrcRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
+    void __setMagnet(void* cur, const char* mg)   { SrcRow temp; temp.deserialize(cur); temp.setMagnet(mg); temp.serialize(cur); }
+};
+
+#endif

@@ -9,7 +9,7 @@
 class UserPre : Table<UserRow>, Deleted{
 public:
     UserPre(std::string_view filename)
-    :   Table<UserRow>(filename), Deleted(filename) {}
+    :   Table<UserRow>(filename), Deleted(filename.data()) {}
 
     void setUsername(
         uint32_t id, 
@@ -23,8 +23,9 @@ public:
         std::string_view origin_pw, 
         std::string_view change_pw
     ){
-        if(origin_pw.data() == getPassword()){
-            __setPassword(Table::row_data(id), change_pw.data());
+        void* row_cur = Table::row_data(id);
+        if(origin_pw.data() == getPassword(row_cur)){
+            __setPassword(row_cur, change_pw.data());
         }else{
             //error;
         }
@@ -39,7 +40,7 @@ public:
         uint32_t id = Deleted::get();
         if(id){
             UserRow temp(id, username, password);
-            temp.serialize(Table::row_slot(id));
+            temp.serialize(Table::row_data(id));
             Deleted::erase(id);
         }else{
             id = Table::getSum()+1;
@@ -50,7 +51,7 @@ public:
     }
 
     void addSrcID(uint32_t SrcID, uint32_t UserID){
-        void* cur = Table::row_slot(UserID);
+        void* cur = Table::row_data(UserID);
         UserRow temp;
         temp.deserialize(cur);
         uint32_t* src = temp.getSource();
@@ -78,9 +79,11 @@ public:
             }
             Usersrc.push_back(temp.getSource()[i]);
         }
-        return &Usersrc;
+        return Usersrc;
     }
 
-    void __setName(void* cur, char* name)    { UserRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
-    void __setPassword(void* cur, char* pw)  { UserRow temp; temp.deserialize(cur); temp.setPassword(pw); temp.serialize(cur); }
-}
+    void __setName(void* cur, const char* name)    { UserRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
+    void __setPassword(void* cur, const char* pw)  { UserRow temp; temp.deserialize(cur); temp.setPassword(pw); temp.serialize(cur); }
+};
+
+#endif

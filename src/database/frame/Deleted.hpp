@@ -71,7 +71,7 @@ class Deleted{
             return deleted_set.contains(id);
         }
 
-        uint32_t get(uint32_t id){
+        uint32_t get(){
             if(!deleted_set.empty()){
                 return *deleted_set.begin();
             }else{

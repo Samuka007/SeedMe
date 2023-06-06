@@ -25,10 +25,11 @@ public:
     
     UserRow()=default;
     UserRow(uint32_t id, std::string_view name, std::string_view password)
-    :   ID(id), 
-        Name(name.substr(0,LENGTH_OF_NAME-1).data()), 
-        Password(password.substr(0,LENGTH_OF_PASSWORD-1).data()) 
-    {}
+    :   ID(id)
+    {
+        setName(name.substr(0,LENGTH_OF_NAME-1).data());
+        setPassword(password.substr(0,LENGTH_OF_PASSWORD-1).data());
+    }
 
     constexpr uint32_t GET_ROW_SIZE() override { return ROW_SIZE;}
 
@@ -37,9 +38,9 @@ public:
     char* getPassword() { return Password;}
     uint32_t* getSource() { return Source;}
 
-    UserRow& setID(uint32_t id) { ID = id; return this;}
-    UserRow& setName(char* name){ std::strcpy(Name, name); return this;}
-    UserRow& setPassword(char* pw){std::strcpy(Password, pw); return this;}
+    UserRow& setID(uint32_t id) { ID = id; return *this;}
+    UserRow& setName(const char* name){ std::strcpy(Name, name); return this;}
+    UserRow& setPassword(const char* pw){std::strcpy(Password, pw); return this;}
     UserRow& setSource(uint32_t* src){std::memcpy(Source, src, MAX_OWN_SOURCE); return this;}
 
     void serialize (void* destination) override;
