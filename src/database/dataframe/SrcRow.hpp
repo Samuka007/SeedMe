@@ -1,8 +1,9 @@
 #ifndef SrcRow_hpp
 #define SrcRow_hpp
 
-#include<string_view>
-#include"database/frame/Row.hpp"
+#include <string_view>
+#include <cstring>
+#include "database/frame/Row.hpp"
 
 namespace Src{
 constexpr size_t LENGTH_OF_NAME   = 160;
@@ -31,12 +32,20 @@ public:
     char* getName() { return Name;}
     char* getMagnet() { return Magnet;}
 
-    void setID(uint32_t id) { ID = id;}
-    void setName(const char* name){ std::strcpy(Name, name);}
-    void setMagnet(const char* mg){std::strcpy(Magnet, mg);}
+    SrcRow& setID(uint32_t id) { ID = id;return *this;}
+    SrcRow& setName(const char* name){ std::strcpy(Name, name);return *this;}
+    SrcRow& setMagnet(const char* mg){std::strcpy(Magnet, mg);return *this;}
     
-    void serialize (void* destination) override;
-    void deserialize(const void* source) override;
+    void serialize (void* destination) override {
+        std::memcpy(static_cast<char*>(destination) + ID_OFFSET, &(this -> ID), ID_SIZE);
+        std::memcpy(static_cast<char*>(destination) + NAME_OFFSET, this -> Name, NAME_SIZE);
+        std::memcpy(static_cast<char*>(destination) + MAGNET_OFFSET, this -> Magnet, MAGNET_SIZE);
+    }
+    void deserialize(const void* source) override {
+        std::memcpy(&(this -> ID), static_cast<const char*>(source) + ID_OFFSET, ID_SIZE);
+        std::memcpy(this -> Name, static_cast<const char*>(source) + NAME_OFFSET, NAME_SIZE);
+        std::memcpy(this -> Magnet, static_cast<const char*>(source) + MAGNET_OFFSET, MAGNET_SIZE);
+    } 
     //TODO: illegal check
 private:
     uint32_t ID;
@@ -45,6 +54,6 @@ private:
     char Magnet [LENGTH_OF_MAGNET];
     //uint8_t Rate;
 };
-}
+};
 using Src::SrcRow;
 #endif

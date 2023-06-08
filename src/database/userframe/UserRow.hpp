@@ -39,12 +39,23 @@ public:
     uint32_t* getSource() { return Source;}
 
     UserRow& setID(uint32_t id) { ID = id; return *this;}
-    UserRow& setName(const char* name){ std::strcpy(Name, name); return this;}
-    UserRow& setPassword(const char* pw){std::strcpy(Password, pw); return this;}
-    UserRow& setSource(uint32_t* src){std::memcpy(Source, src, MAX_OWN_SOURCE); return this;}
+    UserRow& setName(const char* name){ std::strcpy(Name, name); return *this;}
+    UserRow& setPassword(const char* pw){std::strcpy(Password, pw); return *this;}
+    UserRow& setSource(uint32_t* src){std::memcpy(Source, src, MAX_OWN_SOURCE); return *this;}
 
-    void serialize (void* destination) override;
-    void deserialize(const void* source) override;
+    void serialize (void* destination) override{
+        std::memcpy(static_cast<char*>(destination) + ID_OFFSET, &(this -> ID), ID_SIZE);
+        std::memcpy(static_cast<char*>(destination) + NAME_OFFSET, this -> Name, NAME_SIZE);
+        std::memcpy(static_cast<char*>(destination) + PASSWORD_OFFSET, this -> Password, PASSWORD_SIZE);
+        std::memcpy(static_cast<char*>(destination) + SOURCE_OFFSET, this -> Source, SOURCE_SIZE);
+    }
+
+    void deserialize(const void* source) override{
+        std::memcpy(&(this -> ID), static_cast<const char*>(source) + ID_OFFSET, ID_SIZE);
+        std::memcpy(this -> Name, static_cast<const char*>(source) + NAME_OFFSET, NAME_SIZE);
+        std::memcpy(this -> Password, static_cast<const char*>(source) + PASSWORD_OFFSET, PASSWORD_SIZE);
+        std::memcpy(this -> Source, static_cast<const char*>(source) + SOURCE_OFFSET, SOURCE_SIZE);
+    }
     //TODO: illegal check
 private:
     uint32_t ID;
@@ -54,6 +65,6 @@ private:
     uint32_t  Source[MAX_OWN_SOURCE] = {0};
     //uint8_t Rate;
 };
-}
+};
 using User::UserRow;
 #endif
