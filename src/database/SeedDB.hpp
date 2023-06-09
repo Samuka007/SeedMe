@@ -2,18 +2,19 @@
 #define SeedDB_hpp
 
 #include <vector>
-#include "./dataframe/DataPre.hpp"
-#include "./userframe/UserPre.hpp"
-#include "./frame/Metadata.hpp"
+#include <string>
+#include "database/data/Data.hpp"
+#include "database/user/User.hpp"
+#include "database/frame/Metadata.hpp"
 
-namespace seeddb {
+namespace Seeddb {
 
-class SeedDB : public DataPre, public UserPre, public Metadata {
+class SeedDB : public Data, public User, public Metadata {
     public:
         SeedDB(std::string filename)
-        :   DataPre(filename+".data"s), 
-            UserPre(filename+".user"s),
-            Metadata(filename+".meta"s)
+        :   Data(filename + ".data"), 
+            User(filename + ".user"),
+            Metadata(filename + ".meta")
         {}
 
         std::vector<uint32_t> src_name(std::string_view name){
@@ -23,10 +24,10 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
 
         bool magnet_exist(std::string_view magnet){
             bool find = false;
-            for(uint32_t i=1;i<this->getSum();++i){
-                if(this->Deleted::contains(i))
+            for(uint32_t i=1;i<Data::getRowNum();++i){
+                if(this -> Data::deleted.contains(i))
                     continue;
-                if(DataPre::getMagnet(this->row_data(i)) == magnet){
+                if(Data::getMagnet(Src::deserialize(Data::table.row_data(i))) == magnet){
                     find = true;
                     break;
                 }
@@ -36,10 +37,10 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
 
         bool username_exist(std::string_view username){
             bool find = false;
-            for(uint32_t i=1;i<this->getSum();++i){
-                if(this->Deleted::contains(i))
+            for(uint32_t i=1;i<this->User::getRowNum();++i){
+                if(this->User::deleted.contains(i))
                     continue;
-                if(DataPre::getUsername(UserPre::row_data(i)) == username){
+                if(User::getUsername(User::table.row_data(i)) == username){
                     find = true;
                     break;
                 }
@@ -58,26 +59,26 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
                 //throw error
                 return;
             }
-            UserPre::addUser(username, password);
+            User::addUser(username, password);
         }
 
         void UpdateUsername(
             uint32_t userid,
             std::string_view username
         ){
-            UserPre::setUsername(userid, username);
+            User::setUsername(userid, username);
         }
         
         std::vector<uint32_t> GetUserSource(
             uint32_t userid
         ){
-            return getUserSrc(DataPre::row_data(userid));
+            return getUserSrc(Data::table.row_data(userid));
         }
         
         void DeleteUser(
             uint32_t userid
         ){
-            UserPre::deleteUser(userid);
+            User::deleteUser(userid);
         }
         
 
@@ -94,7 +95,7 @@ class SeedDB : public DataPre, public UserPre, public Metadata {
         std::string_view GetSource(
             uint32_t id
         ){
-            return getMagnet(DataPre::row_data(id));
+            return Data::getMagnet(Data::deserialize(Data::table.row_data(id)));
         }
 
         void UpdateSource(

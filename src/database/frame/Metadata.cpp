@@ -6,7 +6,8 @@
 #include<memory>
 #include<algorithm>
 
-#include"Metadata.hpp"
+#include "database/data/Data.hpp"
+#include "Metadata.hpp"
 
 Metadata::Metadata(std::string_view filename)
 :   filename(filename) {
@@ -29,8 +30,8 @@ Metadata::Metadata(std::string_view filename)
 
     ssize_t rd = 1;
     while(true){
-        std::array<char, SIZE_OF_NAME> name {0};
-        rd = read(file_d, name.data(), SIZE_OF_NAME);
+        char name[SIZE_OF_NAME] {0};
+        rd = read(file_d, name, SIZE_OF_NAME);
         if(rd == -1){
             throw "read tag error";
         }
@@ -49,9 +50,9 @@ Metadata::Metadata(std::string_view filename)
         for(auto iter : list){
             tag_set.insert(iter);
         }
-        std::string tag_name = name;
-        for(auto& iter = tag_name.rbegin(), iter != tag_name.rend(); iter++){
-            if(iter != 0){
+        std::string tag_name {name};
+        for(auto iter = tag_name.rbegin(); iter != tag_name.rend(); iter++){
+            if(*iter != 0){
                 break;
             }else{
                 tag_name.pop_back();
@@ -103,8 +104,9 @@ Metadata::~Metadata(){
 
 void Metadata::Log(
     uint32_t id,
-    std::string name
+    std::string_view _name
 ){
+    std::string name {_name};
     std::transform(name.begin(), name.end(), name.begin(), ::tolower);
     for(auto pair : tag_map){
         if(name.find(pair.first)){
@@ -121,19 +123,21 @@ void Metadata::Delete(
     }
 }
 
-void Metadata::Add_tag(std::string tag){
+void Metadata::Add_tag(std::string_view _tag){
+    std::string tag {_tag};
     std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
     std::set<uint32_t> empty;
     tag_map[tag] = empty;
 }
 
-void Metadata::Remove_tag(std::string tag){
+void Metadata::Remove_tag(std::string_view _tag){
+    std::string tag {_tag};
     std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
     tag_map.erase(tag);
 }
 
-void Metadata::Reflash(const Table<SrcRow> &table){
+void Metadata::Reflash(Table<SrcRow> &table){
     for(uint32_t i = 0; i < table.getSum(); ++i){
-        Log(DataPre::getName(table.row_data(i)));
+        Log(i, SrcRow(table.row_data(i)).getName());
     }
 }
