@@ -41,10 +41,10 @@ public:
 
     uint32_t    getRowNum() { return table.getSum();}
 
-
-    uint32_t    getID(SrcRow temp)        { return temp.getID();}
-    char*       getName(SrcRow temp)      { return temp.getName();}
-    char*       getMagnet(SrcRow temp)    { return temp.getMagnet();}
+    SrcRow&     __deserialize(void *cur){ SrcRow temp; temp.deserialize(cur); return temp;}
+    uint32_t    getID(void *cur)        { return __deserialize(cur).getID();}
+    char*       getName(void *cur)      { return __deserialize(cur).getName();}
+    char*       getMagnet(void *cur)    { return __deserialize(cur).getMagnet();}
     void __setName(void* cur, const char* name)   { SrcRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
     void __setMagnet(void* cur, const char* mg)   { SrcRow temp; temp.deserialize(cur); temp.setMagnet(mg); temp.serialize(cur); }
 

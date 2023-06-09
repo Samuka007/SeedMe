@@ -67,9 +67,10 @@ public:
 
     uint32_t    getRowNum() {return table.getSum();}
 
-    uint32_t    getUserID(void* cur)     { UserRow temp; temp.deserialize(cur); return temp.getID();}
-    char*       getUsername(void* cur)       { UserRow temp; temp.deserialize(cur); return temp.getName();}
-    char*       getPassword(void* cur)   { UserRow temp; temp.deserialize(cur); return temp.getPassword();}
+    UserRow&    __deserialize(void *cur){ UserRow temp; temp.deserialize(cur); return temp;}
+    uint32_t    getUserID(void* cur)    { return __deserialize(cur).getID();}
+    char*       getUsername(void* cur)  { return __deserialize(cur).getName();}
+    char*       getPassword(void* cur)  { return __deserialize(cur).getPassword();}
 
     std::vector<uint32_t>& getUserSrc(void* cur) {
         std::vector<uint32_t> Usersrc;
