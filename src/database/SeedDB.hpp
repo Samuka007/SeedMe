@@ -27,7 +27,7 @@ class SeedDB : public Data, public User, public Metadata {
             for(uint32_t i=1;i<Data::getRowNum();++i){
                 if(this -> Data::deleted.contains(i))
                     continue;
-                if(Data::getMagnet(Src::deserialize(Data::table.row_data(i))) == magnet){
+                if(Data::getMagnet(Data::table.row_data(i)) == magnet){
                     find = true;
                     break;
                 }
@@ -95,7 +95,7 @@ class SeedDB : public Data, public User, public Metadata {
         std::string_view GetSource(
             uint32_t id
         ){
-            return Data::getMagnet(Data::deserialize(Data::table.row_data(id)));
+            return Data::getMagnet(Data::table.row_data(id));
         }
 
         void UpdateSource(
@@ -103,16 +103,16 @@ class SeedDB : public Data, public User, public Metadata {
             std::string_view SrcName,
             std::string_view SrcMagnet
         ){
-            setName(id, SrcName);
-            setMagnet(id, SrcMagnet);
-            Matadata::Delete(id);
+            Data::setName(id, SrcName);
+            Data::setMagnet(id, SrcMagnet);
+            Metadata::Delete(id);
             Metadata::Log(id, SrcName);
         }
 
         void DeleteSource(
             uint32_t id
         ){
-            Deleted::insert(id);
+            Data::deleted.insert(id);
             Metadata::Delete(id);
         }
 
