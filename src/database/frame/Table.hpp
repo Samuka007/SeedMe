@@ -105,7 +105,7 @@ public:
         ++num_rows;
     }
 
-    uint32_t getSum(){
+    uint32_t getSum() const{
         return num_rows;
     }
 

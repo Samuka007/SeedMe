@@ -7,7 +7,7 @@
 #include <string>
 #include <string_view>
 
-#include "database/dataframe/DataPre.hpp"
+#include "database/data/Data.hpp"
 
 namespace Meta{
 constexpr uint32_t TAG_LENGTH = 32;
@@ -27,15 +27,15 @@ class Metadata {
         Metadata(std::string_view filename);
         ~Metadata();
 
-        void Reflash(const Table<SrcRow> &);
+        void Reflash(Table<SrcRow> &);
 
-        void Log(uint32_t, std::string);
+        void Log(uint32_t, std::string_view);
 
         void Delete(uint32_t);
 
-        void Add_tag(std::string);
+        void Add_tag(std::string_view);
 
-        void Remove_tag(std::string);
+        void Remove_tag(std::string_view);
 
 };
 }
