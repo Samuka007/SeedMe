@@ -41,9 +41,9 @@ public:
 
     uint32_t    getRowNum() { return table.getSum();}
 
-    uint32_t    getID(void *cur)        { return SrcRow(cur).getID();}
-    char*       getName(void *cur)      { return SrcRow(cur).getName();}
-    char*       getMagnet(void *cur)    { return SrcRow(cur).getMagnet();}
+    uint32_t            getID(void *cur)        { return SrcRow(cur).getID();}
+    std::string_view    getName(void *cur)      { return SrcRow(cur).getName();}
+    std::string_view    getMagnet(void *cur)    { return SrcRow(cur).getMagnet();}
     void __setName(void* cur, const char* name)   { SrcRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
     void __setMagnet(void* cur, const char* mg)   { SrcRow temp; temp.deserialize(cur); temp.setMagnet(mg); temp.serialize(cur); }
 
