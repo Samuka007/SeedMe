@@ -9,14 +9,8 @@
 
 #include "database/data/Data.hpp"
 
-namespace Meta{
-constexpr uint32_t TAG_LENGTH = 32;
-constexpr uint32_t MAX_TAGMAP_NUM = 1023;
-constexpr uint32_t SIZE_OF_NAME = sizeof(char[TAG_LENGTH]);
-constexpr uint32_t SIZE_OF_LIST = sizeof(int[MAX_TAGMAP_NUM]);
-constexpr uint32_t SIZE_OF_TAG = SIZE_OF_NAME + SIZE_OF_LIST;
-        
 class Metadata {
+
     private:
 
         std::string filename;
@@ -24,6 +18,12 @@ class Metadata {
     
     public:
         
+        constexpr static uint32_t TAG_LENGTH = 32;
+        constexpr static uint32_t MAX_TAGMAP_NUM = 1023;
+        constexpr static uint32_t SIZE_OF_NAME = sizeof(char[TAG_LENGTH]);
+        constexpr static uint32_t SIZE_OF_LIST = sizeof(int[MAX_TAGMAP_NUM]);
+        constexpr static uint32_t SIZE_OF_TAG = SIZE_OF_NAME + SIZE_OF_LIST;
+
         Metadata(std::string_view filename);
         ~Metadata();
 
@@ -38,6 +38,4 @@ class Metadata {
         void Remove_tag(std::string_view);
 
 };
-}
-using Meta::Metadata;
 #endif

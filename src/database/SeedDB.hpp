@@ -16,11 +16,11 @@ class SeedDB : public Data, public User, public Metadata {
             User(filename + ".user"),
             Metadata(filename + ".meta")
         {}
-
+/*
         std::vector<uint32_t> src_name(std::string_view name){
             //使用正则表达式与分词
             bool a = true;
-        }
+        }*/
 
         bool magnet_exist(std::string_view magnet){
             bool find = false;

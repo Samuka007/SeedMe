@@ -1,0 +1,5 @@
+# ninja log v5
+0	4051	1686629842187722488	CMakeFiles/SeedMe.dir/src/Seedme.cpp.o	b40c60fe49706293
+0	4068	1686629842197722488	CMakeFiles/SeedMe.dir/src/main.cpp.o	9e8c610e07934edd
+1	3832	1686629963277721679	CMakeFiles/SeedMe.dir/src/main.cpp.o	9e8c610e07934edd
+3832	3955	1686629963397721678	SeedMe	61dbc72c9be8ba1f

@@ -44,17 +44,17 @@ class Deleted{
         ~Deleted(){
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
             if(file_d == -1){
-                throw "read error.";
+                //throw "read error.";
             }
 
             if( lseek(file_d, 0, SEEK_SET) == -1){
-                throw "seek error.";
+                //throw "seek error.";
             } 
 
             std::array<uint32_t, LIST_LENGTH> buf {0};
             std::copy(deleted_set.begin(), deleted_set.end(), buf.begin());
             if( write(file_d, buf.data(), SIZE_OF_LIST) == -1){
-                throw "write list error.";
+                //throw "write list error.";
             }
             close(file_d);
         }

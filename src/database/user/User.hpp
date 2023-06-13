@@ -15,7 +15,7 @@ public:
         uint32_t id, 
         std::string_view name
     ){
-        __setName(table.row_data(id), name.substr(0, Usr::NAME_SIZE-1).data());
+        __setName(table.row_data(id), name.substr(0, UserRow::NAME_SIZE-1).data());
     }
 
     void setPassword(
@@ -55,7 +55,7 @@ public:
         UserRow temp;
         temp.deserialize(cur);
         uint32_t* src = temp.getSource();
-        for(uint32_t i = 0; i<Usr::MAX_OWN_SOURCE; ++i){
+        for(uint32_t i = 0; i<UserRow::MAX_OWN_SOURCE; ++i){
             if(src[i] != 0){
                 src[i] = SrcID;
                 break;
@@ -67,16 +67,16 @@ public:
 
     uint32_t    getRowNum() {return table.getSum();}
 
-    UserRow&    __deserialize(void *cur){ UserRow temp; temp.deserialize(cur); return temp;}
-    uint32_t    getUserID(void* cur)    { return __deserialize(cur).getID();}
-    char*       getUsername(void* cur)  { return __deserialize(cur).getName();}
-    char*       getPassword(void* cur)  { return __deserialize(cur).getPassword();}
+    //UserRow&    __deserialize(void *cur){ UserRow temp; temp.deserialize(cur); return temp;}
+    uint32_t    getUserID(void* cur)    { return UserRow(cur).getID();}
+    char*       getUsername(void* cur)  { return UserRow(cur).getName();}
+    char*       getPassword(void* cur)  { return UserRow(cur).getPassword();}
 
-    std::vector<uint32_t>& getUserSrc(void* cur) {
+    std::vector<uint32_t> getUserSrc(void* cur) {
         std::vector<uint32_t> Usersrc;
         UserRow temp;
         temp.deserialize(cur);
-        for(uint32_t i=0;i<Usr::MAX_OWN_SOURCE; ++i){
+        for(uint32_t i=0;i<UserRow::MAX_OWN_SOURCE; ++i){
             if(!(temp.getSource()[i])){
                 break;
             }

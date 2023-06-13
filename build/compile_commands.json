@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/samuka/workspace/SeedMe/build",
+  "command": "/usr/bin/g++ -I/home/samuka/workspace/SeedMe/src  -std=c++20 -pthread -g -std=gnu++2a -o CMakeFiles/SeedMe.dir/src/main.cpp.o -c /home/samuka/workspace/SeedMe/src/main.cpp",
+  "file": "/home/samuka/workspace/SeedMe/src/main.cpp",
+  "output": "CMakeFiles/SeedMe.dir/src/main.cpp.o"
+}
+]

@@ -12,25 +12,10 @@
 
 template<typename ROW>
 class Table{
-private:
-
-    uint32_t num_rows;
-
-    int file_descriptor;
-
-    uint32_t file_length;
-
-    //void *pages[TABLE_MAX_PAGES];
-
 public:
-    constexpr uint32_t TABLE_MAX_PAGES = 4096;
-    constexpr uint32_t PAGE_SIZE = 4096;
-    constexpr uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW::GET_ROW_SIZE();
-    constexpr uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
-
     Table(std::string_view filename)
     : num_rows(0) {
-        num_rows = file_length / ROW::GET_ROW_SIZE();
+        num_rows = file_length / ROW::ROW_SIZE;
         file_descriptor = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
         if (file_descriptor == -1){
             std::cerr << "Error: cannot open file " << filename << std::endl;
@@ -64,7 +49,7 @@ public:
             uint32_t page_num = num_full_pages;
             if (pages[page_num] != nullptr)
             {
-                pager_flush(page_num, num_additional_rows * ROW::GET_ROW_SIZE());
+                pager_flush(page_num, num_additional_rows * ROW::ROW_SIZE);
                 free(pages[page_num]);
                 pages[page_num] = nullptr;
             }
@@ -91,11 +76,11 @@ public:
         void* page = get_page(page_num);
 
         uint32_t row_offset = row_num % ROWS_PER_PAGE;
-        uint32_t byte_offset = row_offset * ROW::GET_ROW_SIZE();
+        uint32_t byte_offset = row_offset * ROW::ROW_SIZE;
         return /*(char*)*/page + byte_offset;
     }
 
-    void push_back(const ROW& row){
+    void push_back(ROW& row){
         if (num_rows >= TABLE_MAX_ROWS){
             //std::cerr << "Error: Table full." << std::endl;
             return ;
@@ -108,8 +93,6 @@ public:
     uint32_t getSum() const{
         return num_rows;
     }
-
-    void* pages[TABLE_MAX_PAGES];
 
     void* get_page(uint32_t page_num){
         //TODO: Check page_num legal?
@@ -151,6 +134,21 @@ public:
             //error
         }
     }
+
+    constexpr static uint32_t TABLE_MAX_PAGES = 4096;
+    constexpr static uint32_t PAGE_SIZE = 4096;
+    const static uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW::ROW_SIZE;
+    const static uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
+
+private:
+
+    uint32_t num_rows;
+
+    int file_descriptor;
+
+    uint32_t file_length;
+
+    void* pages[TABLE_MAX_PAGES];
 
 };
 
