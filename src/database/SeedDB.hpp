@@ -3,9 +3,18 @@
 
 #include <vector>
 #include <string>
+#include <pair>
 #include "database/data/Data.hpp"
 #include "database/user/User.hpp"
 #include "database/frame/Metadata.hpp"
+using std::pair;
+using status = uint32_t;
+constexpr SUCCESS 100;
+constexpr CHANGE_ERROR 110;
+constexpr CREATE_ERROR 120;
+constexpr GET_SRC_ERROR 210;
+constexpr GET_USR_ERROR 220;
+constexpr FIND_DB_ERROR 310;
 
 namespace Seeddb {
 
@@ -51,7 +60,7 @@ class SeedDB : public Data, public User, public Metadata {
         /**
          * UserController
         */
-        void CreateUser(
+        pair<uint32_t, status> CreateUser(
             std::string_view username,
             std::string_view password
         ){
@@ -62,43 +71,47 @@ class SeedDB : public Data, public User, public Metadata {
             User::addUser(username, password);
         }
 
-        void UpdateUsername(
+        pair<status, uint32_t> UpdateUsername(
             uint32_t userid,
             std::string_view username
         ){
             User::setUsername(userid, username);
+            return std::make_pair(SUCCESS, userid);
         }
         
-        std::vector<uint32_t> GetUserSource(
+        pair<status,std::vector<uint32_t>> GetUserSource(
             uint32_t userid
         ){
-            return getUserSrc(Data::table.row_data(userid));
+            return std::make_pair(SUCCESS, std::move(getUserSrc(Data::table.row_data(userid))));
         }
         
-        void DeleteUser(
+        pair<status, uint32_t> DeleteUser(
             uint32_t userid
         ){
             User::deleteUser(userid);
+            return std::make_pair(SUCCESS, userid);
         }
         
 
         /**
          * SourceController:
         */
-        void CreateSource(
+        pair<status, uint32_t> CreateSource(
             std::string_view SrcName,
             std::string_view SrcMagnet
         ){
-            Metadata::Log(addSrc(SrcName, SrcMagnet), SrcName);
+            uint32_t srcid = addSrc(SrcName, SrcMagnet);
+            Metadata::Log(srcid, SrcName);
+            return std::make_pair(SUCCESS, srcid);
         }
 
-        std::string_view GetSource(
+        pair<status, std::string> GetSource(
             uint32_t id
         ){
-            return Data::getMagnet(Data::table.row_data(id));
+            return std::make_pair(SUCCESS, Data::getMagnet(Data::table.row_data(id)));
         }
 
-        void UpdateSource(
+        pair<status, uint32_t> UpdateSource(
             uint32_t id,
             std::string_view SrcName,
             std::string_view SrcMagnet
@@ -107,13 +120,15 @@ class SeedDB : public Data, public User, public Metadata {
             Data::setMagnet(id, SrcMagnet);
             Metadata::Delete(id);
             Metadata::Log(id, SrcName);
+            return std::make_pair(SUCCESS, id);
         }
 
-        void DeleteSource(
+        pair<status, uint32_t> DeleteSource(
             uint32_t id
         ){
             Data::deleted.insert(id);
             Metadata::Delete(id);
+            return std::make_pair(SUCCESS, id);
         }
 
 
