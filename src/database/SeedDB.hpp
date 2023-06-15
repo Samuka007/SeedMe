@@ -10,13 +10,15 @@
 #include "database/frame/Metadata.hpp"
 using std::pair;
 using status = uint32_t;
-constexpr uint32_t SUCCESS = 100;
-constexpr uint32_t NOTFOUND = 200;
+using source = std::tuple<uint32_t, std::string, std::string>;
+constexpr uint32_t SUCCESS = 200;
+constexpr uint32_t NOT_FOUND = 404;
 constexpr uint32_t CHANGE_ERROR = 110;
 constexpr uint32_t CREATE_ERROR = 120;
 constexpr uint32_t GET_SRC_ERROR = 210;
 constexpr uint32_t GET_USR_ERROR = 220;
 constexpr uint32_t FIND_DB_ERROR = 310;
+constexpr uint32_t WRONG_PASSWORD = 400;
 
 class SeedDB : public Data, public User, public Metadata {
     public:
@@ -26,7 +28,7 @@ class SeedDB : public Data, public User, public Metadata {
             Metadata(filename + ".meta")
         {}
 /*
-        std::vector<uint32_t> src_name(std::string_view name){
+        std::vector<uint32_t> find_src_by_name(std::string_view name){
             //使用正则表达式与分词
             bool a = true;
         }*/
@@ -66,30 +68,56 @@ class SeedDB : public Data, public User, public Metadata {
         ){
             if(username_exist(username)){
                 //throw error
-                return std::make_pair(CREATE_ERROR, NULL);
+                return {CREATE_ERROR, NULL};
             }
             User::addUser(username, password);
         }
 
         pair<status, uint32_t> update_username(
             uint32_t userid,
-            std::string_view username
+            std::string_view username,
+            std::string_view password
         ){
+            if(password != User::getPassword(User::table.row_data(userid))){
+                return {WRONG_PASSWORD, userid};
+            }
             User::setUsername(userid, username);
-            return std::make_pair(SUCCESS, userid);
+            return {SUCCESS, userid};
+        }
+
+        //TODO: update password
+        pair<status, uint32_t> update_password(
+            uint32_t userid,
+            std::string_view old_password,
+            std::string_view new_password
+        ){
+            User::setPassword(userid, old_password, new_password);
+            return {SUCCESS, userid};
         }
         
-        pair<status,std::vector<uint32_t>> get_user_source(
+        pair<status,std::vector<uint32_t>> get_user_source_id(
             uint32_t userid
         ){
-            return std::make_pair(SUCCESS, std::move(getUserSrc(Data::table.row_data(userid))));
+            return {SUCCESS, std::move(getUserSrc(Data::table.row_data(userid)))};
         }
+
+        pair<status, pair<uint32_t, std::vector<source>>> get_sources_by_ids(
+            vector<uint32_t> id_list
+        ){
+            std::vector<source> srcs;
+            for(auto srcid : id_list){
+                srcs.push_back(get_source(srcid).second);
+            }
+            return {SUCCESS, srcs};
+        }
+
+        
         
         pair<status, uint32_t> delete_user(
             uint32_t userid
         ){
             User::deleteUser(userid);
-            return std::make_pair(SUCCESS, userid);
+            return {SUCCESS, userid};
         }
         
 
@@ -102,17 +130,16 @@ class SeedDB : public Data, public User, public Metadata {
         ){
             uint32_t srcid = addSrc(SrcName, SrcMagnet);
             Metadata::Log(srcid, SrcName);
-            return std::make_pair(SUCCESS, srcid);
+            return {SUCCESS, srcid};
         }
 
-        pair<status, std::tuple<std::string_view, std::string_view>> get_source(
-            uint32_t id
+        pair<status, source> get_source(
+            uint32_t srcid
         ){
-            if(id > Data::getRowNum())      { return std::make_pair(NOTFOUND, std::tuple(NULL,NULL));}
-            if(Data::deleted.contains(id))  { return std::make_pair(NOTFOUND, std::tuple(NULL,NULL));}
-            void* cur = Data::table.row_data(id);
-            auto src = std::make_tuple(Data::getName(cur), Data::getMagnet(cur));
-            return std::make_pair(SUCCESS, src);
+            if(srcid > Data::getRowNum())      { return {NOT_FOUND, {}};}
+            if(Data::deleted.contains(srcid))  { return {NOT_FOUND, {}};}
+            void* cur = Data::table.row_data(srcid);
+            return {SUCCESS, {srcid, Data::getName(cur), Data::getMagnet(cur)}};
         }
 
         pair<status, uint32_t> update_source(
@@ -124,7 +151,10 @@ class SeedDB : public Data, public User, public Metadata {
             Data::setMagnet(id, SrcMagnet);
             Metadata::Delete(id);
             Metadata::Log(id, SrcName);
-            return std::make_pair(SUCCESS, id);
+            if(Data::getName(id) != SrcName || Data::getMagnet(id) != SrcMagnet){
+                return {CHANGE_ERROR, id};
+            }
+            return {SUCCESS, id};
         }
 
         pair<status, uint32_t> delete_source(
@@ -132,7 +162,7 @@ class SeedDB : public Data, public User, public Metadata {
         ){
             Data::deleted.insert(id);
             Metadata::Delete(id);
-            return std::make_pair(SUCCESS, id);
+            return {SUCCESS, id};
         }
 
 

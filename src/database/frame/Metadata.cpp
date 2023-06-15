@@ -141,3 +141,18 @@ void Metadata::Reflash(Table<SrcRow> &table){
         Log(i, SrcRow(table.row_data(i)).getName());
     }
 }
+
+std::vector<std::string> Metadata::get_tag_list(){
+    std::vector<std::string> key_list;
+    for(auto it = tag_map.begin(); it!=tag_map.end(); ++it){
+        key_list.push_back(it->first);
+    }
+    return key_list;
+}
+
+std::set<uint32_t> Metadata::get_src_by_tag(std::string_view tag_name){
+    if(tag_map.contains(tag_name)){
+        return tag_map[tag_name];
+    }
+    return {};
+}

@@ -37,5 +37,8 @@ class Metadata {
 
         void Remove_tag(std::string_view);
 
+        std::set<uint32_t> get_src_by_tag(std::string_view);
+
+        std::vector<std::string> get_tag_list();
 };
 #endif

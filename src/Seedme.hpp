@@ -6,23 +6,18 @@
 #include "server/json.hpp"
 //#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "server/httplib.h"
+using namespace httplib;
+using json = nlohmann::json;
 
-namespace Seedme{
-    using namespace httplib;
-    using json_t = nlohmann::json;
-    void tryrun(){
-        
-        std::cout<<"input db name:";
-        std::string filename;
-        std::cin>>filename;
-        std::cout<<"loading server..."<<std::endl;
-        SeedDB Database(filename);
-        
-        std::cout<<"starting server..."<<std::endl;
-        // For server launch
-        httplib::Server seedsvr;
-        
-         
+class Seedme{
+private:
+    SeedDB Database;
+    Server seedsvr;
+
+public:
+    Seedme(std::string database_name, unsigned port = 8080)
+    : Database(database_name)
+    {
         /**
          * Get methods:
         */
@@ -32,15 +27,121 @@ namespace Seedme{
         });
 
         //Get Source by id
-        seedsvr.Get(R"(/numbers/(\d+))", [&](const Request& req, Response& res) {
+        seedsvr.Get(R"(/source/(\d+))", [&](const Request& req, Response& res) {
             auto srcid = std::stoi(req.matches[1]);
-            Database.get_source(srcid);
-            res.set_content(req.matches[1], "text/plain");
+            auto src = Database.get_source(srcid);
+            if(src.first == SUCCESS){
+                res.set_content(json(src.second).dump(), "application/json");
+            }
+        });
+
+        //Get Sources of user
+        seedsvr.Get(R"(/user/(\d+))", [&](const Request& req, Response& res) {
+            //res = user's sources list json
+            auto list = Database.get_sources_by_ids(Database.get_user_source_id(req.matches[1]));
+            res.status = list.first;
+            if(res.status == SUCCESS){
+                res.set_content(json(list.second), "application/json");
+            }
+        });
+
+        //Get Tags
+        seedsvr.Get("/taglist", [&](const Request& req, Response& res) {
+            if(req.has_param("tag")){
+                std::string tag = req.get_param_value("tag");
+            }
+        });
+
+        //Get login page
+        //seedsvr.Get("/login", [&](const Request& req, Response& res) {
+        //    res.set_content()
+        //});
+
+        /**
+         * Post methods:
+        */
+        
+        //Post Source operate
+        seedsvr.Post("/source", [&](const Request& req, Response& res) {
+            json body = json::parse(req.body);
+            if(body.contains("Operate") 
+            && body["Operate"].is_string
+            && body.contains("ID")
+            && body["ID"].is_number_unsigned){
+                res.status = handle_src_operation(body["ID"], body["Operate"]);
+            }else{
+                res.status = 404;
+            }
+        });
+
+        //Post User operate
+        seedsvr.Post("/user", [&](const Request& req, Response& res) {
+            json body = json::parse(req.body);
+            if(body.contains("Operate") 
+            && body["Operate"].is_string){
+                res.status = handle_user_operation(body["ID"], body["Operate"]);
+            }else{
+                res.status = 404;
+            }
         });
 
         //usr authentic -> update
         std::cout<<"start listening..."<<std::endl;
-        seedsvr.listen("0.0.0.0", 8080);
+        seedsvr.listen("0.0.0.0", port);
+    }
+
+    status handle_src_operation(json body){
+        if(!(body.contains("Operate") 
+        && body["Operate"].is_string)){
+                return 404;
+        }
+        std::string oper {body["Operate"]};
+        if(oper == "Create"){
+            //create
+            if(!(body.contains("Name") && body.contains("Magnet"))){
+                return 404;
+            }else{
+                return Database.create_source(body["Name"], body["Magnet"]).first;
+            }
+        }else if(!body.contains("ID")){
+                return 404;
+        }else if(oper == "Update"){
+            if(body.contains("Name") && body.contains("Magnet")){
+                return Database.update_source(body["ID"], body["Name"], body["Magnet"]).first;
+            }
+        }else if(oper == "Delete"){
+            return Database.delete_source(body["ID"]).first;
+        }
+        return 404;
+    }
+
+    status handle_user_operation(json body){
+        if(!(body.contains("Operate") 
+            && body["Operate"].is_string)){
+                return 404;
+        }
+        std::string oper {body["Operate"]};
+        if(oper == "Create"){
+            //create
+            if(!(body.contains("Name") && body.contains("Password"))){
+                return 404;
+            }else{
+                return Database.create_source(body["Name"], body["Password"]).first;
+            }
+        }else if(!body.contains("ID")){
+                return 404;
+        }else if(oper == "UpdateUsername"){
+            if(body.contains("Name") && body.contains("Password")){
+                return Database.update_username(body["ID"], body["Name"], body["Password"]).first;
+            }
+        }else if(oper == "Delete"){
+            return Database.delete_user(body["ID"]).first;
+        }else if(oper == "UpdatePassword"){
+            if(body.contains("OldPassword") && body.contains("NewPassword")){
+                return Database.update_password(body["ID"], body["OldPassword"], body["NewPassword"]).first;
+            }
+        }
+        return 404;
     }
 }
 #endif
