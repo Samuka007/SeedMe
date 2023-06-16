@@ -8,9 +8,11 @@
 #include "database/data/Data.hpp"
 #include "database/user/User.hpp"
 #include "database/frame/Metadata.hpp"
+
 using std::pair;
 using status = unsigned int;
 using source = std::tuple<unsigned int, std::string, std::string>;
+
 constexpr unsigned int SUCCESS = 200;
 constexpr unsigned int NOT_FOUND = 404;
 constexpr unsigned int CHANGE_ERROR = 110;
@@ -129,7 +131,7 @@ class SeedDB : public Data, public User, public Metadata {
             std::string_view SrcMagnet
         ){
             unsigned int srcid = addSrc(SrcName, SrcMagnet);
-            Metadata::Log(srcid, SrcName);
+            Metadata::Log(srcid, SrcName.data());
             return {SUCCESS, srcid};
         }
 
@@ -150,7 +152,7 @@ class SeedDB : public Data, public User, public Metadata {
             Data::setName(id, SrcName);
             Data::setMagnet(id, SrcMagnet);
             Metadata::Delete(id);
-            Metadata::Log(id, SrcName);
+            Metadata::Log(id, SrcName.data());
             //void* cur = Data::table.row_data(id);
             //if(Data::getName(cur) != SrcName || Data::getMagnet(cur) != SrcMagnet){
             //    return {CHANGE_ERROR, id};

@@ -11,10 +11,10 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -pthread")
 
 aux_source_directory(src SRCS)
-include_directories(src)
+include_directories(src src/database src/server)
 
 add_executable(SeedMe ${SRCS})
-file(GLOB sources *.cpp *.h *.hpp)
+
 target_sources(SeedMe PUBLIC ${sources})
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
