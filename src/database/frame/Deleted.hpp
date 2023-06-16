@@ -11,15 +11,15 @@
 #include<array>
 #include<string>
 
-constexpr uint32_t LIST_LENGTH = 1024;
-constexpr uint32_t SIZE_OF_LIST = sizeof(uint32_t[LIST_LENGTH]);
+constexpr unsigned int LIST_LENGTH = 1024;
+constexpr unsigned int SIZE_OF_LIST = sizeof(unsigned int[LIST_LENGTH]);
 
 class Deleted{
     private:
-        //uint32_t DeletedList[LIST_LENGTH] {0};
+        //unsigned int DeletedList[LIST_LENGTH] {0};
         std::string filename;
 
-        std::set<uint32_t> deleted_set;
+        std::set<unsigned int> deleted_set;
     
     public:
         Deleted(std::string filename)
@@ -33,7 +33,7 @@ class Deleted{
             if( lseek(file_d, 0, SEEK_SET) == -1){
                 throw "seek error.";
             } 
-            std::array<uint32_t, LIST_LENGTH> buf;
+            std::array<unsigned int, LIST_LENGTH> buf;
             if( read(file_d, buf.data(), SIZE_OF_LIST) == -1){
                 throw "read list error.";
             }
@@ -51,7 +51,7 @@ class Deleted{
                 //throw "seek error.";
             } 
 
-            std::array<uint32_t, LIST_LENGTH> buf {0};
+            std::array<unsigned int, LIST_LENGTH> buf {0};
             std::copy(deleted_set.begin(), deleted_set.end(), buf.begin());
             if( write(file_d, buf.data(), SIZE_OF_LIST) == -1){
                 //throw "write list error.";
@@ -59,19 +59,19 @@ class Deleted{
             close(file_d);
         }
 
-        bool insert(uint32_t id){
+        bool insert(unsigned int id){
             return deleted_set.insert(id).second;
         }
 
-        bool erase(uint32_t id){
+        bool erase(unsigned int id){
             return deleted_set.erase(id);
         }
 
-        bool contains(uint32_t id){
+        bool contains(unsigned int id){
             return deleted_set.contains(id);
         }
 
-        uint32_t get(){
+        unsigned int get(){
             if(!deleted_set.empty()){
                 return *deleted_set.begin();
             }else{

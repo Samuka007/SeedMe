@@ -22,15 +22,15 @@ public:
             throw "Unabled to open file.";
         }
         file_length = lseek(file_descriptor, 0, SEEK_END);
-        for (uint32_t i = 0; i < TABLE_MAX_PAGES; ++i){
+        for (unsigned int i = 0; i < TABLE_MAX_PAGES; ++i){
             pages[i] = nullptr;
         }
     }
         
     ~Table(){
-        uint32_t num_full_pages = num_rows / ROWS_PER_PAGE;
+        unsigned int num_full_pages = num_rows / ROWS_PER_PAGE;
 
-        for (uint32_t i = 0; i < num_full_pages; i++)
+        for (unsigned int i = 0; i < num_full_pages; i++)
         {
             if (pages[i] == nullptr)
             {
@@ -43,10 +43,10 @@ public:
 
         // There may be a partial page to write to the end of the file
         // This should not be needed after we switch to a B-tree
-        uint32_t num_additional_rows = num_rows % ROWS_PER_PAGE;
+        unsigned int num_additional_rows = num_rows % ROWS_PER_PAGE;
         if (num_additional_rows > 0)
         {
-            uint32_t page_num = num_full_pages;
+            unsigned int page_num = num_full_pages;
             if (pages[page_num] != nullptr)
             {
                 pager_flush(page_num, num_additional_rows * ROW::ROW_SIZE);
@@ -60,7 +60,7 @@ public:
             //std::cout << "Error closing db file." << std::endl;
             //exit(EXIT_FAILURE);
         }
-        for (uint32_t i = 0; i < TABLE_MAX_PAGES; i++)
+        for (unsigned int i = 0; i < TABLE_MAX_PAGES; i++)
         {
             void *page = pages[i];
             if (page)
@@ -71,12 +71,12 @@ public:
         }
     }
     
-    void* row_data(uint32_t row_num){
-        uint32_t page_num = row_num / ROWS_PER_PAGE;
+    void* row_data(unsigned int row_num){
+        unsigned int page_num = row_num / ROWS_PER_PAGE;
         void* page = get_page(page_num);
 
-        uint32_t row_offset = row_num % ROWS_PER_PAGE;
-        uint32_t byte_offset = row_offset * ROW::ROW_SIZE;
+        unsigned int row_offset = row_num % ROWS_PER_PAGE;
+        unsigned int byte_offset = row_offset * ROW::ROW_SIZE;
         return /*(char*)*/page + byte_offset;
     }
 
@@ -90,11 +90,11 @@ public:
         ++num_rows;
     }
 
-    uint32_t getSum() const{
+    unsigned int getSum() const{
         return num_rows;
     }
 
-    void* get_page(uint32_t page_num){
+    void* get_page(unsigned int page_num){
         //TODO: Check page_num legal?
         if (page_num > TABLE_MAX_PAGES){
             std::cerr << "Tried to fetch page number out of bounds. " 
@@ -104,7 +104,7 @@ public:
         }
         if(pages[page_num] == nullptr){
             void *page = malloc(PAGE_SIZE);
-            uint32_t num_pages = file_length / PAGE_SIZE;
+            unsigned int num_pages = file_length / PAGE_SIZE;
             if(file_length % PAGE_SIZE){
                 ++num_pages;
             }
@@ -121,7 +121,7 @@ public:
         return pages[page_num];
     }
 
-    void pager_flush(uint32_t page_num, uint32_t size){
+    void pager_flush(unsigned int page_num, unsigned int size){
         if(pages[page_num] == nullptr){
             //error
         }
@@ -135,18 +135,18 @@ public:
         }
     }
 
-    constexpr static uint32_t TABLE_MAX_PAGES = 4096;
-    constexpr static uint32_t PAGE_SIZE = 4096;
-    const static uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW::ROW_SIZE;
-    const static uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
+    constexpr static unsigned int TABLE_MAX_PAGES = 4096;
+    constexpr static unsigned int PAGE_SIZE = 4096;
+    const static unsigned int ROWS_PER_PAGE = PAGE_SIZE / ROW::ROW_SIZE;
+    const static unsigned int TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
 
 private:
 
-    uint32_t num_rows;
+    unsigned int num_rows;
 
     int file_descriptor;
 
-    uint32_t file_length;
+    unsigned int file_length;
 
     void* pages[TABLE_MAX_PAGES];
 

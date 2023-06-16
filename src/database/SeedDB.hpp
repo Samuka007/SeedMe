@@ -9,16 +9,16 @@
 #include "database/user/User.hpp"
 #include "database/frame/Metadata.hpp"
 using std::pair;
-using status = uint32_t;
-using source = std::tuple<uint32_t, std::string, std::string>;
-constexpr uint32_t SUCCESS = 200;
-constexpr uint32_t NOT_FOUND = 404;
-constexpr uint32_t CHANGE_ERROR = 110;
-constexpr uint32_t CREATE_ERROR = 120;
-constexpr uint32_t GET_SRC_ERROR = 210;
-constexpr uint32_t GET_USR_ERROR = 220;
-constexpr uint32_t FIND_DB_ERROR = 310;
-constexpr uint32_t WRONG_PASSWORD = 400;
+using status = unsigned int;
+using source = std::tuple<unsigned int, std::string, std::string>;
+constexpr unsigned int SUCCESS = 200;
+constexpr unsigned int NOT_FOUND = 404;
+constexpr unsigned int CHANGE_ERROR = 110;
+constexpr unsigned int CREATE_ERROR = 120;
+constexpr unsigned int GET_SRC_ERROR = 210;
+constexpr unsigned int GET_USR_ERROR = 220;
+constexpr unsigned int FIND_DB_ERROR = 310;
+constexpr unsigned int WRONG_PASSWORD = 400;
 
 class SeedDB : public Data, public User, public Metadata {
     public:
@@ -28,14 +28,14 @@ class SeedDB : public Data, public User, public Metadata {
             Metadata(filename + ".meta")
         {}
 /*
-        std::vector<uint32_t> find_src_by_name(std::string_view name){
+        std::vector<unsigned int> find_src_by_name(std::string_view name){
             //使用正则表达式与分词
             bool a = true;
         }*/
 
         bool magnet_exist(std::string_view magnet){
             bool find = false;
-            for(uint32_t i=1;i<Data::getRowNum();++i){
+            for(unsigned int i=1;i<Data::getRowNum();++i){
                 if(this -> Data::deleted.contains(i))
                     continue;
                 if(Data::getMagnet(Data::table.row_data(i)) == magnet){
@@ -48,7 +48,7 @@ class SeedDB : public Data, public User, public Metadata {
 
         bool username_exist(std::string_view username){
             bool find = false;
-            for(uint32_t i=1;i<this->User::getRowNum();++i){
+            for(unsigned int i=1;i<this->User::getRowNum();++i){
                 if(this->User::deleted.contains(i))
                     continue;
                 if(User::getUsername(User::table.row_data(i)) == username){
@@ -62,7 +62,7 @@ class SeedDB : public Data, public User, public Metadata {
         /**
          * UserController
         */
-        pair<status, uint32_t> new_user(
+        pair<status, unsigned int> new_user(
             std::string_view username,
             std::string_view password
         ){
@@ -73,8 +73,8 @@ class SeedDB : public Data, public User, public Metadata {
             User::addUser(username, password);
         }
 
-        pair<status, uint32_t> update_username(
-            uint32_t userid,
+        pair<status, unsigned int> update_username(
+            unsigned int userid,
             std::string_view username,
             std::string_view password
         ){
@@ -86,8 +86,8 @@ class SeedDB : public Data, public User, public Metadata {
         }
 
         //TODO: update password
-        pair<status, uint32_t> update_password(
-            uint32_t userid,
+        pair<status, unsigned int> update_password(
+            unsigned int userid,
             std::string_view old_password,
             std::string_view new_password
         ){
@@ -95,14 +95,14 @@ class SeedDB : public Data, public User, public Metadata {
             return {SUCCESS, userid};
         }
         
-        pair<status,std::vector<uint32_t>> get_user_source_id(
-            uint32_t userid
+        pair<status,std::vector<unsigned int>> get_user_source_id(
+            unsigned int userid
         ){
             return {SUCCESS, std::move(getUserSrc(Data::table.row_data(userid)))};
         }
 
-        pair<status, pair<uint32_t, std::vector<source>>> get_sources_by_ids(
-            vector<uint32_t> id_list
+        pair<status, std::vector<source>> get_sources_by_ids(
+            std::vector<unsigned int> id_list
         ){
             std::vector<source> srcs;
             for(auto srcid : id_list){
@@ -113,8 +113,8 @@ class SeedDB : public Data, public User, public Metadata {
 
         
         
-        pair<status, uint32_t> delete_user(
-            uint32_t userid
+        pair<status, unsigned int> delete_user(
+            unsigned int userid
         ){
             User::deleteUser(userid);
             return {SUCCESS, userid};
@@ -124,26 +124,26 @@ class SeedDB : public Data, public User, public Metadata {
         /**
          * SourceController:
         */
-        pair<status, uint32_t> create_source(
+        pair<status, unsigned int> create_source(
             std::string_view SrcName,
             std::string_view SrcMagnet
         ){
-            uint32_t srcid = addSrc(SrcName, SrcMagnet);
+            unsigned int srcid = addSrc(SrcName, SrcMagnet);
             Metadata::Log(srcid, SrcName);
             return {SUCCESS, srcid};
         }
 
         pair<status, source> get_source(
-            uint32_t srcid
+            unsigned int srcid
         ){
             if(srcid > Data::getRowNum())      { return {NOT_FOUND, {}};}
             if(Data::deleted.contains(srcid))  { return {NOT_FOUND, {}};}
             void* cur = Data::table.row_data(srcid);
-            return {SUCCESS, {srcid, Data::getName(cur), Data::getMagnet(cur)}};
+            return {SUCCESS, {srcid, Data::getName(cur).data(), Data::getMagnet(cur).data()}};
         }
 
-        pair<status, uint32_t> update_source(
-            uint32_t id,
+        pair<status, unsigned int> update_source(
+            unsigned int id,
             std::string_view SrcName,
             std::string_view SrcMagnet
         ){
@@ -151,14 +151,15 @@ class SeedDB : public Data, public User, public Metadata {
             Data::setMagnet(id, SrcMagnet);
             Metadata::Delete(id);
             Metadata::Log(id, SrcName);
-            if(Data::getName(id) != SrcName || Data::getMagnet(id) != SrcMagnet){
-                return {CHANGE_ERROR, id};
-            }
+            //void* cur = Data::table.row_data(id);
+            //if(Data::getName(cur) != SrcName || Data::getMagnet(cur) != SrcMagnet){
+            //    return {CHANGE_ERROR, id};
+            //}
             return {SUCCESS, id};
         }
 
-        pair<status, uint32_t> delete_source(
-            uint32_t id
+        pair<status, unsigned int> delete_source(
+            unsigned int id
         ){
             Data::deleted.insert(id);
             Metadata::Delete(id);

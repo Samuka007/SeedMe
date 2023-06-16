@@ -1,6 +1,6 @@
 #include "Seedme.hpp"
 
 int main(){
-    Seedme::tryrun();
+    Seedme db("filename");
     return 0;
 }

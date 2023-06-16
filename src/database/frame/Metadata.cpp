@@ -4,6 +4,7 @@
 #include<unistd.h>
 #include<cstring>
 #include<memory>
+#include<vector>
 #include<algorithm>
 
 #include "database/data/Data.hpp"
@@ -38,7 +39,7 @@ Metadata::Metadata(std::string_view filename)
         if(rd == 0){
             break;
         }
-        uint32_t list[SIZE_OF_LIST] {0};
+        unsigned int list[SIZE_OF_LIST] {0};
         rd = read(file_d, list, SIZE_OF_LIST);
         if(rd == -1){
             throw "read tag error";
@@ -46,7 +47,7 @@ Metadata::Metadata(std::string_view filename)
         if(rd == 0){
             break;
         }
-        std::set<uint32_t> tag_set;
+        std::set<unsigned int> tag_set;
         for(auto iter : list){
             tag_set.insert(iter);
         }
@@ -87,7 +88,7 @@ Metadata::~Metadata(){
         if(rd == 0){
             break;
         }
-        std::array<uint32_t, SIZE_OF_LIST> list {0};
+        std::array<unsigned int, SIZE_OF_LIST> list {0};
         std::copy(pair.second.begin(), pair.second.end(), list.begin());
         rd = read(file_d, list.data(), SIZE_OF_LIST);
         if(rd == -1){
@@ -103,7 +104,7 @@ Metadata::~Metadata(){
 }
 
 void Metadata::Log(
-    uint32_t id,
+    unsigned int id,
     std::string_view _name
 ){
     std::string name {_name};
@@ -116,7 +117,7 @@ void Metadata::Log(
 }
 
 void Metadata::Delete(
-    uint32_t id
+    unsigned int id
 ){
     for(auto pair : tag_map){
         pair.second.erase(id);
@@ -126,7 +127,7 @@ void Metadata::Delete(
 void Metadata::Add_tag(std::string_view _tag){
     std::string tag {_tag};
     std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
-    std::set<uint32_t> empty;
+    std::set<unsigned int> empty;
     tag_map[tag] = empty;
 }
 
@@ -137,7 +138,7 @@ void Metadata::Remove_tag(std::string_view _tag){
 }
 
 void Metadata::Reflash(Table<SrcRow> &table){
-    for(uint32_t i = 0; i < table.getSum(); ++i){
+    for(unsigned int i = 0; i < table.getSum(); ++i){
         Log(i, SrcRow(table.row_data(i)).getName());
     }
 }
@@ -150,9 +151,9 @@ std::vector<std::string> Metadata::get_tag_list(){
     return key_list;
 }
 
-std::set<uint32_t> Metadata::get_src_by_tag(std::string_view tag_name){
-    if(tag_map.contains(tag_name)){
-        return tag_map[tag_name];
+std::set<unsigned int> Metadata::get_src_by_tag(std::string_view tag_name){
+    if(tag_map.contains(tag_name.data())){
+        return tag_map[tag_name.data()];
     }
     return {};
 }

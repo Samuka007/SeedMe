@@ -12,14 +12,14 @@ public:
     :   table(filename), deleted(filename.data()) {}
 
     void setUsername(
-        uint32_t id, 
+        unsigned int id, 
         std::string_view name
     ){
         __setName(table.row_data(id), name.substr(0, UserRow::NAME_SIZE-1).data());
     }
 
     void setPassword(
-        uint32_t id,
+        unsigned int id,
         std::string_view origin_pw, 
         std::string_view change_pw
     ){
@@ -31,13 +31,13 @@ public:
         }
     }
 
-    void deleteUser(uint32_t id){
+    void deleteUser(unsigned int id){
         deleted.insert(id);
     }
 
-    uint32_t addUser(std::string_view username, std::string_view password){
+    unsigned int addUser(std::string_view username, std::string_view password){
         //should do legal check
-        uint32_t id = deleted.get();
+        unsigned int id = deleted.get();
         if(id){
             UserRow temp(id, username, password);
             temp.serialize(table.row_data(id));
@@ -50,12 +50,12 @@ public:
         return id;
     }
 
-    void addSrcID(uint32_t SrcID, uint32_t UserID){
+    void addSrcID(unsigned int SrcID, unsigned int UserID){
         void* cur = table.row_data(UserID);
         UserRow temp;
         temp.deserialize(cur);
-        uint32_t* src = temp.getSource();
-        for(uint32_t i = 0; i<UserRow::MAX_OWN_SOURCE; ++i){
+        unsigned int* src = temp.getSource();
+        for(unsigned int i = 0; i<UserRow::MAX_OWN_SOURCE; ++i){
             if(src[i] != 0){
                 src[i] = SrcID;
                 break;
@@ -65,18 +65,18 @@ public:
         temp.serialize(cur);
     }
 
-    uint32_t    getRowNum() {return table.getSum();}
+    unsigned int    getRowNum() {return table.getSum();}
 
     //UserRow&    __deserialize(void *cur){ UserRow temp; temp.deserialize(cur); return temp;}
-    uint32_t            getUserID(void* cur)    { return UserRow(cur).getID();}
+    unsigned int            getUserID(void* cur)    { return UserRow(cur).getID();}
     std::string_view    getUsername(void* cur)  { return UserRow(cur).getName();}
     std::string_view    getPassword(void* cur)  { return UserRow(cur).getPassword();}
 
-    std::vector<uint32_t> getUserSrc(void* cur) {
-        std::vector<uint32_t> Usersrc;
+    std::vector<unsigned int> getUserSrc(void* cur) {
+        std::vector<unsigned int> Usersrc;
         UserRow temp;
         temp.deserialize(cur);
-        for(uint32_t i=0;i<UserRow::MAX_OWN_SOURCE; ++i){
+        for(unsigned int i=0;i<UserRow::MAX_OWN_SOURCE; ++i){
             if(!(temp.getSource()[i])){
                 break;
             }

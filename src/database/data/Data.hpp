@@ -10,23 +10,23 @@ public:
     Data(std::string_view filename)
     :   table(filename), deleted(filename.data()) {}
 
-    void setName(uint32_t id, std::string_view name){
+    void setName(unsigned int id, std::string_view name){
         __setName(table.row_data(id), name.substr(0, SrcRow::NAME_SIZE-1).data());
     }
 
-    void setMagnet(uint32_t id, std::string_view magnet){
+    void setMagnet(unsigned int id, std::string_view magnet){
         if(magnet.starts_with("magnet:?xt=")){
             __setMagnet(table.row_data(id), magnet.substr(0, SrcRow::MAGNET_SIZE-1).data());
         }
     }
 
-    void removeSrc(uint32_t id){
+    void removeSrc(unsigned int id){
         deleted.insert(id);
     }
 
-    uint32_t addSrc(std::string_view name, std::string_view magnet){
+    unsigned int addSrc(std::string_view name, std::string_view magnet){
         //should do legal check
-        uint32_t id = deleted.get();
+        unsigned int id = deleted.get();
         if(id){
             setName(id, name);
             setMagnet(id, magnet);
@@ -39,9 +39,9 @@ public:
         return id;
     }
 
-    uint32_t    getRowNum() { return table.getSum();}
+    unsigned int    getRowNum() { return table.getSum();}
 
-    uint32_t            getID(void *cur)        { return SrcRow(cur).getID();}
+    unsigned int            getID(void *cur)        { return SrcRow(cur).getID();}
     std::string_view    getName(void *cur)      { return SrcRow(cur).getName();}
     std::string_view    getMagnet(void *cur)    { return SrcRow(cur).getMagnet();}
     void __setName(void* cur, const char* name)   { SrcRow temp; temp.deserialize(cur); temp.setName(name); temp.serialize(cur); }
