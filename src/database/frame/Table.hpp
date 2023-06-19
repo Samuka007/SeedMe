@@ -1,11 +1,14 @@
 #ifndef Table_hpp
 #define Table_hpp
 
-#include<iostream>
-#include<sys/stat.h>
-#include<sys/types.h>
-#include<fcntl.h>
-#include<unistd.h> 
+#include <iostream>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h> 
+#include <errno.h>
+#include <stdexcept>
+#include <cstring>
 
 //#include "./Pager.hpp"
 //#include <string_view>
@@ -18,8 +21,7 @@ public:
         num_rows = file_length / ROW::ROW_SIZE;
         file_descriptor = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
         if (file_descriptor == -1){
-            std::cerr << "Error: cannot open file " << filename << std::endl;
-            throw "Unabled to open file.";
+            throw std::runtime_error(errno);
         }
         file_length = lseek(file_descriptor, 0, SEEK_END);
         for (unsigned int i = 0; i < TABLE_MAX_PAGES; ++i){
@@ -71,7 +73,7 @@ public:
         }
     }
     
-    void* row_data(unsigned int row_num){
+    void* row_data(unsigned int row_num) {
         unsigned int page_num = row_num / ROWS_PER_PAGE;
         void* page = get_page(page_num);
 

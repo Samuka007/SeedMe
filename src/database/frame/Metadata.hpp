@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
+#include "database/frame/ErrorHandler.hpp"
 #include "database/data/Data.hpp"
 
 class Metadata {
@@ -31,16 +32,16 @@ class Metadata {
         constexpr static unsigned int SIZE_OF_LIST = sizeof(int[MAX_TAGMAP_NUM]);
         constexpr static unsigned int SIZE_OF_TAG = SIZE_OF_NAME + SIZE_OF_LIST;
 
-        Metadata(std::string_view filename)
-        :   filename(filename) {
+        Metadata(std::string_view _filename)
+        :   filename{_filename.data()} {
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
             //file readin
             if(file_d == -1){
-                throw "read error.";
+                throw FileOpenError {filename.data()};
             }
 
             if(lseek(file_d, 0, SEEK_SET) == -1){
-                throw "seek error.";
+                throw FileError {filename.data()};
             }
             /**
              *  void check(ssize_t result) {
@@ -52,18 +53,30 @@ class Metadata {
        
             ssize_t rd = 1;
             while(true){
+                //Read tag name
                 char name[SIZE_OF_NAME] {0};
                 rd = read(file_d, name, SIZE_OF_NAME);
                 if(rd == -1){
-                    throw "read tag error";
+                    throw FileReadError {filename.data()};
                 }
                 if(rd == 0){
                     break;
                 }
+                std::string tag_name {name};
+                tag_name = tag_name.substr(tag_name.find_last_not_of('0') + 1);
+                //for(auto iter = tag_name.rbegin(); iter != tag_name.rend(); iter++){
+                //    if(*iter != 0){
+                //        break;
+                //    }else{
+                //        tag_name.pop_back();
+                //    }
+                //}
+
+                //Read tag list
                 unsigned int list[SIZE_OF_LIST] {0};
                 rd = read(file_d, list, SIZE_OF_LIST);
                 if(rd == -1){
-                    throw "read tag error";
+                    throw FileReadError {filename.data()};
                 }
                 if(rd == 0){
                     break;
@@ -72,29 +85,21 @@ class Metadata {
                 for(auto iter : list){
                     tag_set.insert(iter);
                 }
-                std::string tag_name {name};
-                for(auto iter = tag_name.rbegin(); iter != tag_name.rend(); iter++){
-                    if(*iter != 0){
-                        break;
-                    }else{
-                        tag_name.pop_back();
-                    }
-                }
-                tag_map[tag_name] = tag_set;
+                tag_map[tag_name] = tag_set;                
             }
             if(close(file_d) == -1){
-                throw "close error.";
+                throw FileError {filename};
             }
         }
         ~Metadata(){
-            ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
+            ssize_t file_d = open(filename.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
             //file readin
             if(file_d == -1){
-                throw "read error.";
+                throw FileOpenError {filename};
             }
 
             if(lseek(file_d, 0, SEEK_SET) == -1){
-                throw "seek error.";
+                throw FileError {filename};
             }
 
             ssize_t rd = 1;
@@ -103,7 +108,7 @@ class Metadata {
                 std::copy(pair.first.begin(), pair.first.end(), name.begin());
                 rd = write(file_d, name.data(), SIZE_OF_NAME);
                 if(rd == -1){
-                    throw "read tag error";
+                    throw FileReadError {filename};
                 }
                 if(rd == 0){
                     break;
@@ -112,20 +117,23 @@ class Metadata {
                 std::copy(pair.second.begin(), pair.second.end(), list.begin());
                 rd = read(file_d, list.data(), SIZE_OF_LIST);
                 if(rd == -1){
-                    throw "read tag error";
+                    throw FileReadError {filename};
                 }
                 if(rd == 0){
                     break;
                 }
             }
             if(close(file_d) == -1){
-                throw "close error.";
+                throw FileError {filename};
             }
         }
 
-        void Reflash(Table<SrcRow> &);
-
-        void Log(unsigned int id, std::string name){
+        void Reflash(Table<SrcRow> &table){
+            for(unsigned i = 0; i < table.getSum(); ++i){
+                Log(i, SrcRow(table.row_data(i)).getName());
+            }
+        }
+        void Log(unsigned id, std::string name){
             std::transform(name.begin(), name.end(), name.begin(), ::tolower);
             for(auto pair : tag_map){
                 if(name.find(pair.first)){
@@ -134,26 +142,26 @@ class Metadata {
             }
         }
 
-        void Delete(unsigned int id){
-        for(auto pair : tag_map){
-            pair.second.erase(id);
+        void Delete(unsigned id){
+            for(auto pair : tag_map){
+                pair.second.erase(id);
+            }
         }
-    }
 
         void Add_tag(std::string tag){
-        std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
-        std::set<unsigned int> empty;
-        tag_map[tag] = empty;
-    }
+            std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
+            std::set<unsigned int> empty;
+            tag_map[tag] = empty;
+        }
 
         void Remove_tag(std::string tag){
             std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
             tag_map.erase(tag);
         }
 
-        std::set<unsigned int> get_src_by_tag(std::string_view tag_name){
-            if(tag_map.contains(tag_name.data())){
-                return tag_map[tag_name.data()];
+        std::set<unsigned int> get_src_by_tag(const std::string& tag_name){
+            if(tag_map.contains(tag_name)){
+                return tag_map[tag_name];
             }
             return {};
         }
