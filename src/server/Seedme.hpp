@@ -15,7 +15,7 @@ private:
     Server seedsvr;
 
 public:
-    Seedme(std::string database_name, unsigned port = 8080)
+    Seedme(std::string database_name, size_t port = 8080)
     : Database(database_name)
     {
         /**
@@ -38,7 +38,7 @@ public:
         //Get Sources of user
         seedsvr.Get(R"(/user/(\d+))", [&](const Request& req, Response& res) {
             //res = user's sources list json
-            auto list = Database.get_sources_by_ids(Database.get_user_source_id(std::stoi(req.matches[1])).second);
+            auto list = Database.get_sources_by_list(Database.get_user_source_id(std::stoi(req.matches[1])));
             res.status = list.first;
             if(res.status == SUCCESS){
                 res.set_content(json(list.second), "application/json");
@@ -90,7 +90,8 @@ public:
         seedsvr.listen("0.0.0.0", port);
     }
 
-    status handle_src_operation(json body){
+    void handle_src_operation(json body){
+        /*TODO: add handler*/
         if(!(body.contains("Operate") 
         && body["Operate"].is_string())){
                 return 404;
@@ -101,16 +102,19 @@ public:
             if(!(body.contains("Name") && body.contains("Magnet"))){
                 return 404;
             }else{
-                return Database.create_source(std::string(body["Name"]), std::string(body["Magnet"])).first;
+                Database.create_source(std::string(body["Name"]), std::string(body["Magnet"]))
             }
         }else if(!body.contains("ID")){
                 return 404;
         }else if(oper == "Update"){
-            if(body.contains("Name") && body.contains("Magnet")){
-                return Database.update_source(body["ID"], std::string(body["Name"]), std::string(body["Magnet"])).first;
+            if(body.contains("Name")){
+                Database.update_src_name(body["ID"], std::string(body["Name"]));
+            }
+            if(body.contains("Magnet")){
+                Database.update_src_magnet(body["ID"], std::string(body["Magnet"]));
             }
         }else if(oper == "Delete"){
-            return Database.delete_source(body["ID"]).first;
+            Database.delete_source(body["ID"]);
         }
         return 404;
     }
@@ -130,15 +134,18 @@ public:
             }
         }else if(!body.contains("ID")){
                 return 404;
-        }else if(oper == "UpdateUsername"){
-            if(body.contains("Name") && body.contains("Password")){
-                return Database.update_username(body["ID"], std::string(body["Name"]), std::string(body["Password"])).first;
-            }
-        }else if(oper == "Delete"){
-            return Database.delete_user(body["ID"]).first;
-        }else if(oper == "UpdatePassword"){
-            if(body.contains("OldPassword") && body.contains("NewPassword")){
-                return Database.update_password(body["ID"], std::string(body["OldPassword"]), std::string(body["NewPassword"])).first;
+        }else{
+            /*TODO: varified id and source owner with token*/
+            if(oper == "UpdateUsername"){
+                if(body.contains("Name") && body.contains("Password")){
+                    return Database.update_username(body["ID"], std::string(body["Name"]), std::string(body["Password"])).first;
+                }
+            }else if(oper == "Delete"){
+                return Database.delete_user(body["ID"]).first;
+            }else if(oper == "UpdatePassword"){
+                if(body.contains("OldPassword") && body.contains("NewPassword")){
+                    return Database.update_password(body["ID"], std::string(body["OldPassword"]), std::string(body["NewPassword"])).first;
+                }
             }
         }
         return 404;

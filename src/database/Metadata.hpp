@@ -14,7 +14,7 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include "database/frame/ErrorHandler.hpp"
+#include "database/ErrorHandler.hpp"
 #include "database/data/Data.hpp"
 
 class Metadata {
@@ -148,25 +148,26 @@ class Metadata {
             }
         }
 
-        void Add_tag(std::string tag){
+        void add_tag(std::string tag){
             std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
             std::set<unsigned int> empty;
             tag_map[tag] = empty;
         }
 
-        void Remove_tag(std::string tag){
+        void remove_tag(std::string tag){
             std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
             tag_map.erase(tag);
         }
 
-        std::set<unsigned int> get_src_by_tag(const std::string& tag_name){
+        const std::set<unsigned int>& get_srcs_by_tag(const std::string& tag_name){
             if(tag_map.contains(tag_name)){
                 return tag_map[tag_name];
+            }else{
+                throw std::invalid_argument("No such tag");
             }
-            return {};
         }
 
-        std::vector<std::string> get_tag_list(){
+        std::vector<std::string>& get_tag_list(){
             std::vector<std::string> key_list;
             for(auto it = tag_map.begin(); it!=tag_map.end(); ++it){
                 key_list.push_back(it->first);

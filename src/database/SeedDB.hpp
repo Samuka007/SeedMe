@@ -5,13 +5,15 @@
 #include <string>
 #include <utility>
 #include <tuple>
-#include "database/data/Data.hpp"
-#include "database/user/User.hpp"
-#include "database/frame/Metadata.hpp"
+#include "encrypt/md5.h"
+#include "database/Data.hpp"
+#include "database/User.hpp"
+#include "database/Metadata.hpp"
 
 using std::pair;
-using status = unsigned int;
-using source = std::tuple<unsigned int, std::string, std::string>;
+using status = size_t;
+struct source_t {unsigned srcid; std::string srcname; std::string magnet; unsigned owner;};
+struct user_t   {std::string usrname; std::string password};
 
 constexpr unsigned int SUCCESS = 200;
 constexpr unsigned int NOT_FOUND = 404;
@@ -29,7 +31,7 @@ class SeedDB : public Data, public User, public Metadata {
             User(filename + ".user"),
             Metadata(filename + ".meta")
         {}
-/*
+        /*
         std::vector<unsigned int> find_src_by_name(std::string_view name){
             //使用正则表达式与分词
             bool a = true;
@@ -38,9 +40,9 @@ class SeedDB : public Data, public User, public Metadata {
         bool magnet_exist(std::string_view magnet){
             bool find = false;
             for(unsigned int i=1;i<Data::getRowNum();++i){
-                if(this -> Data::deleted.contains(i))
+                if(Data::deleted.contains(i))
                     continue;
-                if(Data::getMagnet(Data::table.row_data(i)) == magnet){
+                if(Data::getMagnet(i) == magnet){
                     find = true;
                     break;
                 }
@@ -50,10 +52,10 @@ class SeedDB : public Data, public User, public Metadata {
 
         bool username_exist(std::string_view username){
             bool find = false;
-            for(unsigned int i=1;i<this->User::getRowNum();++i){
-                if(this->User::deleted.contains(i))
+            for(unsigned int i=1;i<this->User::get_last_user();++i){
+                if(User::deleted.contains(i))
                     continue;
-                if(User::getUsername(User::table.row_data(i)) == username){
+                if(User::getUsername(User::table[i]) == username){
                     find = true;
                     break;
                 }
@@ -64,129 +66,135 @@ class SeedDB : public Data, public User, public Metadata {
         /**
          * UserController
         */
-        pair<status, unsigned int> new_user(
-            std::string_view username,
-            std::string_view password
-        ){
-            if(username_exist(username)){
-                //throw error
-                return {CREATE_ERROR, NULL};
+        unsigned login (user_t user) {
+            for(unsigned int id=1; id<this->User::get_last_user(); ++id){
+                if(User::deleted.contains(id))
+                    continue;
+                if(User::getUsername(User::table[id]) == user.usrname){
+                    if(MD5(User::getPassword(User::table[id])).toStr()
+                    == user.password){
+                        return id;
+                    }
+                    else{
+                        throw std::invalid_argument("wrong password");
+                    }
+                }
             }
-            User::addUser(username, password);
         }
 
-        pair<status, unsigned int> update_username(
-            unsigned int userid,
-            std::string_view username,
-            std::string_view password
-        ){
-            if(password != User::getPassword(User::table.row_data(userid))){
-                return {WRONG_PASSWORD, userid};
+        inline unsigned new_user (user_t user) {
+            if(username_exist(user.usrname)) {
+                throw std::invalid_argument("username already exist");
             }
-            User::setUsername(userid, username);
-            return {SUCCESS, userid};
+            return User::addUser(user.usrname, user.password);
+        }
+
+        inline void update_username(unsigned usrid, std::string_view username_new){
+            User::setUsername(usrid, username_new);
         }
 
         //TODO: update password
-        pair<status, unsigned int> update_password(
-            unsigned int userid,
+        inline void update_password(
+            unsigned userid,
             std::string_view old_password,
             std::string_view new_password
         ){
-            User::setPassword(userid, old_password, new_password);
-            return {SUCCESS, userid};
-        }
-        
-        pair<status,std::vector<unsigned int>> get_user_source_id(
-            unsigned int userid
-        ){
-            return {SUCCESS, std::move(getUserSrc(Data::table.row_data(userid)))};
+            User::setPassword(userid, MD5(old_password).toStr(), MD5(new_password).toStr());
         }
 
-        pair<status, std::vector<source>> get_sources_by_ids(
+        std::vector<source_t>& get_sources_by_ids(
             std::vector<unsigned int> id_list
         ){
-            std::vector<source> srcs;
+            std::vector<source_t> srcs;
             for(auto srcid : id_list){
-                srcs.push_back(get_source(srcid).second);
+                srcs.push_back(get_source(srcid));
             }
-            return {SUCCESS, srcs};
+            return srcs;
         }
-
         
-        
-        pair<status, unsigned int> delete_user(
-            unsigned int userid
-        ){
+        void delete_user (unsigned int userid) {
             User::deleteUser(userid);
-            return {SUCCESS, userid};
         }
-        
 
         /**
          * SourceController:
         */
-        pair<status, unsigned int> create_source(
+        unsigned int create_source(
             std::string_view SrcName,
-            std::string_view SrcMagnet
+            std::string_view SrcMagnet,
+            unsigned owner
         ){
-            unsigned int srcid = addSrc(SrcName, SrcMagnet);
+            unsigned srcid = addSrc(SrcName, SrcMagnet, owner);
             Metadata::Log(srcid, SrcName.data());
-            return {SUCCESS, srcid};
+            return srcid;
         }
 
-        pair<status, source> get_source(
-            unsigned int srcid
-        ){
-            if(srcid > Data::getRowNum())      { return {NOT_FOUND, {}};}
-            if(Data::deleted.contains(srcid))  { return {NOT_FOUND, {}};}
-            void* cur = Data::table.row_data(srcid);
-            return {SUCCESS, {srcid, Data::getName(cur).data(), Data::getMagnet(cur).data()}};
+        source_t& get_source (unsigned srcid){
+
+            if(srcid > Data::getRowNum())      { throw std::invalid_argument("id out of range"); }
+            if(Data::deleted.contains(srcid))  { throw std::invalid_argument("id deleted");}
+
+            return source_t {
+                srcid,
+                Data::getName(srcid),
+                Data::getMagnet(srcid),
+                Data::getOwner(srcid)
+            };
         }
 
-        pair<status, unsigned int> update_source(
+        void update_src_name(
             unsigned int id,
-            std::string_view SrcName,
-            std::string_view SrcMagnet
+            std::string_view SrcName
         ){
+
+            if(Data::deleted.contains(id))  { throw std::invalid_argument("id deleted"); }
+            
+
             Data::setName(id, SrcName);
-            Data::setMagnet(id, SrcMagnet);
             Metadata::Delete(id);
             Metadata::Log(id, SrcName.data());
-            //void* cur = Data::table.row_data(id);
-            //if(Data::getName(cur) != SrcName || Data::getMagnet(cur) != SrcMagnet){
-            //    return {CHANGE_ERROR, id};
-            //}
-            return {SUCCESS, id};
+        }
+        
+        void update_src_mag(
+            unsigned int id,
+            std::string_view SrcMagnet
+        ){
+
+            if(Data::deleted.contains(id))  { throw std::invalid_argument("id deleted"); }
+
+            Data::setMagnet(id, SrcMagnet);
         }
 
-        pair<status, unsigned int> delete_source(
+        void delete_src(
             unsigned int id
         ){
             Data::deleted.insert(id);
             Metadata::Delete(id);
-            return {SUCCESS, id};
         }
 
+        std::vector<source_t>& get_usr_src_list(std::string_view userid){
+            std::vector<source_t> srcs;
+            for(unsigned id=1; id <= Data::get_last_src(); ++id ){
+                if(Data::deleted.contains(id))
+                    continue;
+                if(Data::getOwner(id) == userid){
+                    srcs.push_back(move(get_source(id)));
+                }
+            }
+            if(srcs.empty()){
+                throw std::invalid_argument("no source found");
+            }
+            return srcs;
+        }
 
-
-        /**--finished
-        * store-
-        * read-
-        * generate -
-        * change metadata-
-        * 
-        * log metadata and store source-
-        * 
-        */
-
-        /*
-        *   two filters:
-        *       - userid                    read    write
-        *           - 0 = visitor           all     0
-        *           - 1 = suporior          all     all
-        *           - 100+ = user           all     1
-        *       - tags(metadatas)
-        */
+        std::vector<source_t>& get_src_by_ids(
+            const std::vector<unsigned int>& id_list
+        ){
+            std::vector<source_t> srcs;
+            for(auto srcid : id_list){
+                srcs.push_back(get_source(srcid));
+            }
+            return srcs;
+        }
 };
 #endif

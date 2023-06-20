@@ -80,4 +80,6 @@ class Deleted{
         }
 };
 
+constexpr size_t DELETED_SIZE = sizeof(Deleted);
+
 #endif /*Deleted.hpp*/
