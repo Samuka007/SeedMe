@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <stdexcept>
 #include <cstring>
+#include "database/frame/ErrorHandler.hpp"
 
 //#include "./Pager.hpp"
 //#include <string_view>
@@ -18,8 +19,7 @@ class Table{
 public:
     Table(std::string_view filename)
     : num_rows(0) {
-        num_rows = file_length / ROW::ROW_SIZE;
-        file_descriptor = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
+        auto file_descriptor = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
         if (file_descriptor == -1){
             throw std::runtime_error(errno);
         }
@@ -27,6 +27,7 @@ public:
         for (unsigned int i = 0; i < TABLE_MAX_PAGES; ++i){
             pages[i] = nullptr;
         }
+        num_rows = file_length / ROW::ROW_SIZE;
     }
         
     ~Table(){

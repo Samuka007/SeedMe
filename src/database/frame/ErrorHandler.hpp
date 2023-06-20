@@ -46,4 +46,19 @@ class FileReadError : public FileError{
 
 };
 
+class SourceError : exception {
+    public:
+        SourceError(unsigned id) : m_id {id} {
+            setMessage(std::format("Source Error! ID: {}", m_id));
+        }
+        const char* what() const noexcept override { return m_message.c_str();}
+        virtual const unsigned getErrorID() const noexcept { return m_id;}
+
+    protected:
+        virtual void setMessage(const string& message) { m_message = message;}
+    private:
+        unsigned m_id;
+        string m_message;
+};
+
 #endif //Errorhandler.hpp
