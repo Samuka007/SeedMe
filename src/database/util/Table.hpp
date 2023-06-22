@@ -14,7 +14,7 @@
 #include <map>
 #include <memory>
 #include "database/util/Page.hpp"
-#include "database/util/ErrorHandler.hpp"
+#include "util/ErrorHandler.hpp"
 
 using std::string_view;
 using std::string;
@@ -28,21 +28,19 @@ class Table{
     public:
         typedef shared_ptr<Page> page_p; //page_p is the pointer to the page
         static constexpr size_t default_buffer_size = 1 /*G*/* 1024 /*M*/* 1024 /*K*/* 1024 /*byte*/;
-        using Page::page_size;
-        using Page::rows_per_page;
 
         Table(string_view filename, size_t buffer_size = default_buffer_size)
-        : file_descriptor(nullptr), file_length(0), buffer_page_limit(buffer_size / page_size)
+        : file_descriptor(std::make_shared<int>(open(filename.data(), O_RDWR | O_CREAT, S_IWUSR | S_IRUSR))), 
+            buffer_page_limit( buffer_size / Page::page_size )
         {
-            file_descriptor = make_shared<int>(open(filename.c_str(), O_RDWR | O_CREAT, S_IWUSR | S_IRUSR));
             if(*file_descriptor == -1){
-                throw FileOpenError("Error opening file: ", errno);
+                throw FileOpenError(filename.data());
             }
             auto file_length = lseek(*file_descriptor, 0, SEEK_END);
             if(file_length == -1){
-                throw FileError("Error seeking file: ", errno);
+                throw FileError(filename.data());
             }
-            last_row_num = file_length / page_size;
+            last_row_num = file_length / Page::page_size;
             //pages = vector<Page> {nullptr};
         }
 
@@ -54,9 +52,9 @@ class Table{
             if(row_num > last_row_num){
                 throw std::out_of_range("Row number out of range");
             }
-            int page_num = row_num / rows_per_page;
+            int page_num = row_num / Page::rows_per_page;
             page_p page = get_page(page_num);
-            unsigned int row_offset = row_num % rows_per_page - 1;
+            unsigned int row_offset = row_num % Page::rows_per_page - 1;
             return (*page)[row_offset];
         }
 
@@ -70,20 +68,20 @@ class Table{
             }
             if(pages.size() > buffer_page_limit){ //page is out of memory
                 //release page from memory
-                pages.erase(page_queue.top()->p_num);
+                pages.erase(page_queue.top()->page_num());
                 page_queue.pop();
             }
             return pages[page_num];
         }
 
         void new_row(T r){
-            if(last_row_num % rows_per_page == 0){
+            if(last_row_num % Page::rows_per_page == 0){
                 //create new page
-                auto new_page = make_shared<Page>(last_row_num / rows_per_page, file_descriptor);
-                pages[last_row_num / rows_per_page] = new_page;
+                auto new_page = make_shared<Page>(last_row_num / Page::rows_per_page, file_descriptor);
+                pages[last_row_num / Page::rows_per_page] = new_page;
                 page_queue.push(new_page);
             }
-            (*pages[last_row_num / rows_per_page])[last_row_num % rows_per_page] = r;
+            (*pages[last_row_num / Page::rows_per_page])[last_row_num % Page::rows_per_page] = r;
             last_row_num += 1;
         }
         

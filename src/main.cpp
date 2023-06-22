@@ -1,6 +1,7 @@
 #include "Seedme.hpp"
 
 int main(){
-    Seedme db("filename");
+    try{Seedme db("filename");}catch(...){}
+    
     return 0;
 }

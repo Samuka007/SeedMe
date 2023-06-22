@@ -1,4 +1,4 @@
-
+#pragma once
 
 #include <string_view>
 #include <vector>
@@ -26,16 +26,16 @@ class Data {
         return table[id].owner;
     }
 
-    inline get_last_src() {
+    inline unsigned get_last_src() {
         return table.last_row();
     }
     
     void setSrcname(unsigned id, const string_view srcname) {
-        table[id].name = srcname;
+        std::strcpy(table[id].name, srcname.data());
     }
 
     void setMagnet(unsigned id, const string_view magnet) {
-        table[id].magnet = magnet;
+        std::strcpy(table[id].magnet, magnet.data());
     }
 
     void deleteSrc(unsigned id) {
@@ -46,14 +46,22 @@ class Data {
         unsigned id = deleted.get();
         if (id == 0) {
             id = table.last_row() + 1;
-            table.new_row(SrcRow {id, srcname, magnet, owner});
+            
+            table.new_row(SrcRow {id, srcname.data(), magnet.data(), owner});
         } else {
-            table[id] = {id, srcname, magnet, owner};
+            table[id] = {id, srcname.data(), magnet.data(), owner};
         }
         return id;
     }
 
-    private:
+    bool isDeleted(unsigned id) {
+        return deleted.contains(id);
+    }
+
+    inline auto last_row() {
+        return table.last_row();
+    }
+
     Table<SrcRow> table;
     Deleted deleted;
 };

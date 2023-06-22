@@ -14,7 +14,7 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include "database/util/ErrorHandler.hpp"
+#include "util/ErrorHandler.hpp"
 #include "database/service/Data.hpp"
 
 class Metadata {
@@ -91,6 +91,7 @@ class Metadata {
                 throw FileError {filename};
             }
         }
+
         ~Metadata(){
             ssize_t file_d = open(filename.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
             //file readin
@@ -128,11 +129,12 @@ class Metadata {
             }
         }
 
-        void Reflash(Table<SrcRow> &table){
-            for(unsigned i = 0; i < table.getSum(); ++i){
-                Log(i, SrcRow(table.row_data(i)).getName());
-            }
-        }
+        // void Reflash(Table<SrcRow> &table){
+        //     for(unsigned i = 0; i < table.last_row; ++i){
+        //         Log(i, SrcRow(table.row_data(i)).getName());
+        //     }
+        // }
+
         void Log(unsigned id, std::string name){
             std::transform(name.begin(), name.end(), name.begin(), ::tolower);
             for(auto pair : tag_map){
@@ -150,7 +152,7 @@ class Metadata {
 
         void add_tag(std::string tag){
             std::transform(tag.begin(), tag.end(), tag.begin(), ::tolower);
-            std::set<unsigned int> empty;
+            std::set<unsigned> empty;
             tag_map[tag] = empty;
         }
 
@@ -159,15 +161,18 @@ class Metadata {
             tag_map.erase(tag);
         }
 
-        const std::set<unsigned int>& get_srcs_by_tag(const std::string& tag_name){
+        std::vector<unsigned int> get_ids_by_tag(std::string tag_name){
+            std::transform(tag_name.begin(), tag_name.end(), tag_name.begin(), ::tolower);
+            std::vector<unsigned int> src_list;
             if(tag_map.contains(tag_name)){
-                return tag_map[tag_name];
-            }else{
-                throw std::invalid_argument("No such tag");
+                std::copy(tag_map[tag_name].begin(), tag_map[tag_name].end(), std::back_inserter(src_list));
+                return src_list;
             }
+            throw TagNotFoundError {tag_name};
+
         }
 
-        std::vector<std::string>& get_tag_list(){
+        std::vector<std::string> get_tag_list(){
             std::vector<std::string> key_list;
             for(auto it = tag_map.begin(); it!=tag_map.end(); ++it){
                 key_list.push_back(it->first);

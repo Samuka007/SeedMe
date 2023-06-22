@@ -14,7 +14,7 @@
 #include <unistd.h> 
 #include <errno.h>
 #include "database/util/Table.hpp"
-#include "database/util/ErrorHandler.hpp"
+#include "util/ErrorHandler.hpp"
 using std::array;
 using std::shared_ptr;
 
@@ -64,6 +64,8 @@ class Pager{
         bool operator< (const Pager& p) const{
             return call_frequency < p.call_frequency;
         }
+
+        inline page_t page_num() { return p_num; }
         
     private:
         page_t p_num; //number of page

@@ -2,6 +2,8 @@
 #define User_hpp
 
 #include <string_view>
+#include <exception>
+#include <format>
 #include <vector>
 #include "database/model/Rows.hpp"
 #include "database/util/Table.hpp"
@@ -24,14 +26,20 @@ class User {
     }
     
     void setUsername(unsigned id, string_view username) {
-        table[id].username = username;
+        if (username.size() > UsrRow::LENGTH_OF_NAME) {
+            throw std::invalid_argument(std::format("Username should less than {}.", UsrRow::LENGTH_OF_NAME));
+        }
+        std::strcpy(table[id].username, username.data());
     }
 
     void setPassword(unsigned id, string_view password_old, string_view password_new) {
-        if(password_old != table[id].password) {
-            throw std::invalid_argument("wrong password");
+        if (password_old != table[id].password) {
+            throw PasswordIncorrectError();
         }
-        table[id].password = password_new;
+        if (password_new.size() > UsrRow::LENGTH_OF_PASSWORD) {
+            throw std::invalid_argument(std::format("Password should less than {}.", UsrRow::LENGTH_OF_NAME));
+        }
+        std::strcpy(table[id].password, password_new.data());
     }
 
     void deleteUser(unsigned id) {
@@ -46,15 +54,14 @@ class User {
         unsigned id = deleted.get();
         if(id == 0) {
             id = table.last_row() + 1;
-            table.new_row(UsrRow {id, username, password});
+            table.new_row(UsrRow {id, username.data(), password.data()});
         } else {
-            table[id] = UsrRow {id, username, password};
+            table[id] = UsrRow {id, username.data(), password.data()};
             deleted.erase(id);
         }
         return id;
     }
 
-    private:
     Table<UsrRow> table;
     Deleted deleted;
 };

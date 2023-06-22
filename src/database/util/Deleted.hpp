@@ -10,6 +10,7 @@
 #include<set>
 #include<array>
 #include<string>
+#include"util/ErrorHandler.hpp"
 
 constexpr unsigned int LIST_LENGTH = 1024;
 constexpr unsigned int SIZE_OF_LIST = sizeof(unsigned int[LIST_LENGTH]);

@@ -3,13 +3,24 @@
 #define Seedme_hpp
 #include <iostream>
 #include <vector>
+#include <string>
+#include <string_view>
+#include <map>
 #include "database/service/SeedDB.hpp"
-#include "server/json/json.hpp"
 //#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "server/network/httplib.h"
 #include "encrypt/TokenHandler.hpp"
-using namespace httplib;
-using json = nlohmann::json;
+#include "server/json/json.hpp"
+#include "util/ErrorHandler.hpp"
+
+using httplib::Headers;
+using httplib::Server;
+using httplib::Request;
+using httplib::Response;
+using httplib::Params;
+using httplib::Logger;
+
+
 using std::string;
 using std::string_view;
 using std::vector;
@@ -35,32 +46,40 @@ public:
 
         //Get Source by id
         seedsvr.Get(R"(/get/source/(\d+))", [&](const Request& req, Response& res) {
-            auto srcid = std::stoi(req.matches[1]);
+            auto srcid = std::stol(req.matches[1]);
             try{
                 auto src = Database.get_source(srcid);
-                res.set_content(json(src.second).dump(), "application/json");
+
+                res.set_content (Json_src(src).dump() , "application/json");
                 res.status = OK;
             }catch(const std::exception& e){
                 res.status = NOT_FOUND;
             }
         });
 
-        // Get Sources of user
-        // seedsvr.Get(R"(/get/user/(\d+))", [&](const Request& req, Response& res) {
-        //     //res = user's sources list json
-        //     try{
-        //         auto list = Database.get_src_by_ids(
-        //                         Database.get_user_src_ids(std::stoi(req.matches[1])));
-        //         res.status = OK;
-        //     }catch(const std::exception& e){
-        //         res.status = NOT_FOUND;
-        //     }
-        // });
+        //Get Sources of user
+        seedsvr.Get(R"(/get/user/(\d+))", [&](const Request& req, Response& res) {
+            //res = user's sources list json
+            try{
+                res.set_content ( List_for_src(Database.get_usr_src_list(std::stol(req.matches[1]))).dump(), "application/json" );
+                res.status = OK;
+            }catch(const std::exception& e){
+                res.status = NOT_FOUND;
+            }
+        });
 
         // Get Tags
         seedsvr.Get("/get/taglist", [&](const Request& req, Response& res) {
             if(req.has_param("tag")){
-                string tag = req.get_param_value("tag");
+                try{
+                    string tag = req.get_param_value("tag");
+                    res.set_content ( List_for_src(
+                                        Database.get_sources_by_ids(
+                                            Database.get_ids_by_tag(tag)) ).dump(), "application/json" );
+                    res.status = OK;
+                }catch(const std::exception& e){
+                    res.status = NOT_FOUND;
+                }
             }
         });
 
@@ -70,70 +89,44 @@ public:
         
         //Login Api, return token
         seedsvr.Post("/post/login", [&](const Request& req, Response& res) {
-            json body = json::parse(req.body);
-            if(body.contains("username") && body.contains("password")){
-                try{
-                    auto userid = Database.login(body["username"],body["password"]);
-                    string token = tokens.generate_token(userid);
-                    res.set_content(json(
-                                    {
-                                        {"token", token},
-                                        {"usrid", userid}
-                                    }
-                                ).dump(), "application/json");
-                    res.status = OK;
-                }catch(const std::exception& e){
-                    res.status = NOT_FOUND;
-                }
+            auto body = Body_handler(req.body);
+            try{
+                auto userid = Database.login(body.parse_to_user());
+                string token = tokens.generate_token(userid);
+                res.set_content(login_response(token, userid).dump() , "application/json");
+                res.status = OK;
+            }catch(const std::exception& e){
+                res.status = NOT_FOUND;
             }
+            
         });
         
-        //Post Source operation
+        // Post Source operation
+        // always needs token
+        // if call create, then name, magnet and userid are needed, write userid in owner.
+        // if call update, then id and name or magnet are needed
+        // if call delete, then id is needed
         seedsvr.Post("/post/source", [&](const Request& req, Response& res) {
-            json body = json::parse(req.body);
-            if (!body.contains("token")) {
+            auto body = Body_handler(req.body).parse_to_src_operation();
+            try{
+                handle_src_operation(body);
+                res.status = OK;
+            } catch(const std::exception& e) {
                 res.status = NOT_FOUND;
-                return;
-            }
-            if (body.contains("token")
-                && body["token"].is_string()
-                && body.contains("Operation") 
-                && body["Operation"].is_string()
-                && body.contains("ID")
-                && body["ID"].is_number_unsigned()){
-
-                std::string token = body["token"];
-                std::string operation = body["Operation"];
-                unsigned srcid = body["ID"];
-                try{
-                    // src'onwer is not this usr 
-                    // or the token is out of date
-                    if(!tokens.verify_token(body["token"], 
-                                            Database.get_source(srcid).owner)){
-                        throw std::invalid_argument("Invalid token");
-                    }
-                    res.status = handle_src_operation(body);
-                } catch(const std::exception& e) {
-                    res.set_content(json(
-                                    {
-                                        {"error", e.what()}
-                                    }
-                                ).dump(), "application/json");
-                    res.status = NOT_FOUND;
-                }
-            } else {
-                res.status = 404;
             }
         });
 
-        //Post User operation
+        // Post User operation
+        // if call create, then name, password are needed
+        // if call update, then id and name or password (new and old) are needed
+        // if call delete, then id is needed
         seedsvr.Post("/post/user", [&](const Request& req, Response& res) {
-            json body = json::parse(req.body);
-            if(body.contains("Operation") 
-            && body["Operation"].is_string()){
-                res.status = handle_user_operation(body);
-            }else{
-                res.status = 404;
+            auto body = Body_handler(req.body).parse_to_usr_operation();
+            try{
+                handle_user_operation(body);
+                res.status = OK;
+            } catch (const std::exception& e) {
+                res.status = NOT_FOUND;
             }
         });
 
@@ -141,63 +134,73 @@ public:
         seedsvr.listen("0.0.0.0", port);
     }
 
-    void handle_src_operation(json body){
+    void handle_src_operation(const src_operation_t body){
         /*TODO: add handler*/
-        if(!(body.contains("Operation") 
-        && body["Operation"].is_string())){
+        if(body.token.empty()){
                 throw std::invalid_argument("Invalid argument");
         }
-        string oper {body["Operation"]};
-        if(oper == "Create"){
+        //varified token
+        if(!tokens.check_token(body.token, body.src.owner)){
+            throw std::invalid_argument("Invalid argument");
+        }
+        if(body.oper == "Create"){
             //create
-            if(!(body.contains("Name") && body.contains("Magnet"))){
+            if(body.src.magnet.empty() || body.src.srcname.empty()){
                 throw std::invalid_argument("Invalid argument");
             }else{
-                Database.create_source(string(body["Name"]), string(body["Magnet"]))
+                Database.create_source(body.src.srcname, body.src.magnet, body.src.owner);
             }
-        }else if(!body.contains("ID")){
+
+        }else if(body.src.srcid == 0){
                 throw std::invalid_argument("Invalid argument");
-        }else if(oper == "Update"){
-            if(body.contains("Name")){
-                Database.update_src_name(body["ID"], string(body["Name"]));
+
+        }else if(body.oper == "Update"){
+            if(!body.src.srcname.empty()){
+                Database.update_src_name(body.src.srcid, body.src.srcname);
             }
-            if(body.contains("Magnet")){
-                Database.update_src_magnet(body["ID"], string(body["Magnet"]));
+            if(!body.src.magnet.empty()){
+                Database.update_src_magnet(body.src.srcid, body.src.magnet);
             }
-        }else if(oper == "Delete"){
-            Database.delete_src(body["ID"]);
+
+        }else if(body.oper == "Delete"){
+            Database.delete_src(body.src.srcid);
+        }else{
+            throw std::invalid_argument("Invalid argument");
         }
-        throw std::invalid_argument("Invalid argument");
     }
 
-    void handle_user_operation(json body){
-        if(!(body.contains("Operation") 
-            && body["Operation"].is_string())){
+    void handle_user_operation(usr_operation_t& body){
+        if(body.oper.empty()){
                 throw std::invalid_argument("Invalid argument");
         }
-        string oper {body["Operation"]};
-        if(oper == "Create"){
+
+        if(body.oper == "Create"){
             //create
-            if(!(body.contains("Name") && body.contains("Password"))){
+            if(body.usr.usrname.empty() || body.usr.password.empty()){
                 throw std::invalid_argument("Invalid argument");
             }else{
-                Database.create_source(string(body["Name"]), string(body["Password"]));
+                Database.new_user(body.usr);
             }
-        }else if(!body.contains("ID")){
+        }else if(body.usrid == 0){
                 throw std::invalid_argument("Invalid argument");
         }else{
-            /*TODO: varified id and source owner with token*/
-            if(oper == "UpdateUsername"){
-                if(body.contains("Name") && body.contains("Password")){
-                    Database.update_username(body["ID"], string(body["NewName"]));
+            /*varified id with token*/
+            if(!tokens.check_token(body.token, body.usrid)){
+                throw std::invalid_argument("Invalid argument");
+            }
+            if(body.oper == "UpdateUsername"){
+                if(body.usr.usrname.empty() || body.usr.password.empty()){
+                    throw std::invalid_argument("Invalid argument");
+                }else{
+                    Database.update_username(body.usrid, body.usr.usrname);
                 }
-            }else if(oper == "Delete"){
-                Database.delete_user(body["ID"]);
-            }else if(oper == "UpdatePassword"){
-                if(body.contains("OldPassword") && body.contains("NewPassword")){
-                    Database.update_password(body["ID"], 
-                                            string{body["OldPassword"]}, 
-                                            string{body["NewPassword"]});
+            }else if(body.oper == "Delete"){
+                Database.delete_user(body.usrid);
+            }else if(body.oper == "UpdatePassword"){
+                if(body.usr.password.empty() || body.password_old.empty()){
+                    throw std::invalid_argument("Invalid argument");
+                }else{
+                    Database.update_password(body.usrid, body.password_old, body.usr.password);
                 }
             }
         }
