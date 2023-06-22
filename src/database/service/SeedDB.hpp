@@ -6,23 +6,17 @@
 #include <utility>
 #include <tuple>
 #include "encrypt/md5.h"
-#include "database/Data.hpp"
-#include "database/User.hpp"
-#include "database/Metadata.hpp"
+#include "database/service/Data.hpp"
+#include "database/service/User.hpp"
+#include "database/util/Metadata.hpp"
 
 using std::pair;
 using status = size_t;
 struct source_t {unsigned srcid; std::string srcname; std::string magnet; unsigned owner;};
 struct user_t   {std::string usrname; std::string password};
 
-constexpr unsigned int SUCCESS = 200;
+constexpr unsigned int OK = 200;
 constexpr unsigned int NOT_FOUND = 404;
-constexpr unsigned int CHANGE_ERROR = 110;
-constexpr unsigned int CREATE_ERROR = 120;
-constexpr unsigned int GET_SRC_ERROR = 210;
-constexpr unsigned int GET_USR_ERROR = 220;
-constexpr unsigned int FIND_DB_ERROR = 310;
-constexpr unsigned int WRONG_PASSWORD = 400;
 
 class SeedDB : public Data, public User, public Metadata {
     public:
@@ -66,6 +60,7 @@ class SeedDB : public Data, public User, public Metadata {
         /**
          * UserController
         */
+        
         unsigned login (user_t user) {
             for(unsigned int id=1; id<this->User::get_last_user(); ++id){
                 if(User::deleted.contains(id))

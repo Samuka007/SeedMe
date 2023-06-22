@@ -11,9 +11,10 @@
 #include <stdexcept>
 #include <cstring>
 #include <queue>
+#include <map>
 #include <memory>
-#include "database/Page.hpp"
-#include "database/ErrorHandler.hpp"
+#include "database/util/Page.hpp"
+#include "database/util/ErrorHandler.hpp"
 
 using std::string_view;
 using std::string;

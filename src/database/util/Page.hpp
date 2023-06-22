@@ -13,8 +13,8 @@
 #include <fcntl.h>
 #include <unistd.h> 
 #include <errno.h>
-#include "database/Table.hpp"
-#include "database/ErrorHandler.hpp"
+#include "database/util/Table.hpp"
+#include "database/util/ErrorHandler.hpp"
 using std::array;
 using std::shared_ptr;
 

@@ -2,21 +2,27 @@
 #ifndef Seedme_hpp
 #define Seedme_hpp
 #include <iostream>
-#include "database/SeedDB.hpp"
-#include "server/json.hpp"
+#include <vector>
+#include "database/service/SeedDB.hpp"
+#include "server/json/json.hpp"
 //#define CPPHTTPLIB_OPENSSL_SUPPORT
-#include "server/httplib.h"
+#include "server/network/httplib.h"
+#include "encrypt/TokenHandler.hpp"
 using namespace httplib;
 using json = nlohmann::json;
+using std::string;
+using std::string_view;
+using std::vector;
 
 class Seedme{
 private:
     SeedDB Database;
     Server seedsvr;
+    TokenHandler tokens;
 
 public:
-    Seedme(std::string database_name, size_t port = 8080)
-    : Database(database_name)
+    Seedme(string database_name, size_t port = 8080)
+    : Database(database_name), tokens(Database)
     {
         /**
          * Get methods:
@@ -27,28 +33,32 @@ public:
         });
 
         //Get Source by id
-        seedsvr.Get(R"(/source/(\d+))", [&](const Request& req, Response& res) {
+        seedsvr.Get(R"(/get/source/(\d+))", [&](const Request& req, Response& res) {
             auto srcid = std::stoi(req.matches[1]);
-            auto src = Database.get_source(srcid);
-            if(src.first == SUCCESS){
+            try{
+                auto src = Database.get_source(srcid);
                 res.set_content(json(src.second).dump(), "application/json");
+                res.status = OK;
+            }catch(const std::exception& e){
+                res.status = NOT_FOUND;
             }
         });
 
         //Get Sources of user
-        seedsvr.Get(R"(/user/(\d+))", [&](const Request& req, Response& res) {
+        seedsvr.Get(R"(/get/user/(\d+))", [&](const Request& req, Response& res) {
             //res = user's sources list json
-            auto list = Database.get_sources_by_list(Database.get_user_source_id(std::stoi(req.matches[1])));
-            res.status = list.first;
-            if(res.status == SUCCESS){
-                res.set_content(json(list.second), "application/json");
+            try{
+                auto list = Database.get_sources_by_list(Database.get_user_source_id(std::stoi(req.matches[1])));
+                res.status = OK;
+            }catch(const std::exception& e){
+                res.status = NOT_FOUND;
             }
         });
 
         //Get Tags
-        seedsvr.Get("/taglist", [&](const Request& req, Response& res) {
+        seedsvr.Get("/get/taglist", [&](const Request& req, Response& res) {
             if(req.has_param("tag")){
-                std::string tag = req.get_param_value("tag");
+                string tag = req.get_param_value("tag");
             }
         });
 
@@ -61,8 +71,18 @@ public:
          * Post methods:
         */
         
+        //Login Api
+        seedsvr.Post("/post/login", [&](const Request& req, Response& res) {
+            json body = json::parse(req.body);
+            if(body.contains("username") && body.contains("password")){
+                try{
+                    auto userid = Database.login(body["username"],body["password"]);
+                }
+            }
+        });
+        
         //Post Source operate
-        seedsvr.Post("/source", [&](const Request& req, Response& res) {
+        seedsvr.Post("/post/source", [&](const Request& req, Response& res) {
             json body = json::parse(req.body);
             if(body.contains("Operate") 
             && body["Operate"].is_string()
@@ -75,7 +95,7 @@ public:
         });
 
         //Post User operate
-        seedsvr.Post("/user", [&](const Request& req, Response& res) {
+        seedsvr.Post("/post/user", [&](const Request& req, Response& res) {
             json body = json::parse(req.body);
             if(body.contains("Operate") 
             && body["Operate"].is_string()){
@@ -96,22 +116,22 @@ public:
         && body["Operate"].is_string())){
                 return 404;
         }
-        std::string oper {body["Operate"]};
+        string oper {body["Operate"]};
         if(oper == "Create"){
             //create
             if(!(body.contains("Name") && body.contains("Magnet"))){
                 return 404;
             }else{
-                Database.create_source(std::string(body["Name"]), std::string(body["Magnet"]))
+                Database.create_source(string(body["Name"]), string(body["Magnet"]))
             }
         }else if(!body.contains("ID")){
                 return 404;
         }else if(oper == "Update"){
             if(body.contains("Name")){
-                Database.update_src_name(body["ID"], std::string(body["Name"]));
+                Database.update_src_name(body["ID"], string(body["Name"]));
             }
             if(body.contains("Magnet")){
-                Database.update_src_magnet(body["ID"], std::string(body["Magnet"]));
+                Database.update_src_magnet(body["ID"], string(body["Magnet"]));
             }
         }else if(oper == "Delete"){
             Database.delete_source(body["ID"]);
@@ -124,13 +144,13 @@ public:
             && body["Operate"].is_string())){
                 return 404;
         }
-        std::string oper {body["Operate"]};
+        string oper {body["Operate"]};
         if(oper == "Create"){
             //create
             if(!(body.contains("Name") && body.contains("Password"))){
                 return 404;
             }else{
-                return Database.create_source(std::string(body["Name"]), std::string(body["Password"])).first;
+                Database.create_source(string(body["Name"]), string(body["Password"]));
             }
         }else if(!body.contains("ID")){
                 return 404;
@@ -138,13 +158,15 @@ public:
             /*TODO: varified id and source owner with token*/
             if(oper == "UpdateUsername"){
                 if(body.contains("Name") && body.contains("Password")){
-                    return Database.update_username(body["ID"], std::string(body["Name"]), std::string(body["Password"])).first;
+                    Database.update_username(body["ID"], string(body["NewName"]));
                 }
             }else if(oper == "Delete"){
-                return Database.delete_user(body["ID"]).first;
+                Database.delete_user(body["ID"]);
             }else if(oper == "UpdatePassword"){
                 if(body.contains("OldPassword") && body.contains("NewPassword")){
-                    return Database.update_password(body["ID"], std::string(body["OldPassword"]), std::string(body["NewPassword"])).first;
+                    Database.update_password(body["ID"], 
+                                            string{body["OldPassword"]}, 
+                                            string{body["NewPassword"]});
                 }
             }
         }

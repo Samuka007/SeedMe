@@ -2,9 +2,9 @@
 
 #include <string_view>
 #include <vector>
-#include "database/Rows.hpp"
-#include "database/Table.hpp"
-#include "database/Deleted.hpp"
+#include "database/model/Rows.hpp"
+#include "database/util/Table.hpp"
+#include "database/util/Deleted.hpp"
 using std::string;
 using std::string_view;
 
