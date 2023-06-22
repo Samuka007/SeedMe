@@ -27,10 +27,11 @@ public:
         /**
          * Get methods:
         */
-        //Default page
-        seedsvr.Get("/", [](const Request &, Response &res) {
-            res.set_content("Hello SeedMe!", "text/plain");
-        });
+
+        // Default page
+        // seedsvr.Get("/", [](const Request &, Response &res) {
+            // res.set_content("Hello SeedMe!", "text/plain");
+        // });
 
         //Get Source by id
         seedsvr.Get(R"(/get/source/(\d+))", [&](const Request& req, Response& res) {
@@ -44,88 +45,118 @@ public:
             }
         });
 
-        //Get Sources of user
-        seedsvr.Get(R"(/get/user/(\d+))", [&](const Request& req, Response& res) {
-            //res = user's sources list json
-            try{
-                auto list = Database.get_sources_by_list(Database.get_user_source_id(std::stoi(req.matches[1])));
-                res.status = OK;
-            }catch(const std::exception& e){
-                res.status = NOT_FOUND;
-            }
-        });
+        // Get Sources of user
+        // seedsvr.Get(R"(/get/user/(\d+))", [&](const Request& req, Response& res) {
+        //     //res = user's sources list json
+        //     try{
+        //         auto list = Database.get_src_by_ids(
+        //                         Database.get_user_src_ids(std::stoi(req.matches[1])));
+        //         res.status = OK;
+        //     }catch(const std::exception& e){
+        //         res.status = NOT_FOUND;
+        //     }
+        // });
 
-        //Get Tags
+        // Get Tags
         seedsvr.Get("/get/taglist", [&](const Request& req, Response& res) {
             if(req.has_param("tag")){
                 string tag = req.get_param_value("tag");
             }
         });
 
-        //Get login page
-        //seedsvr.Get("/login", [&](const Request& req, Response& res) {
-        //    res.set_content()
-        //});
-
         /**
          * Post methods:
         */
         
-        //Login Api
+        //Login Api, return token
         seedsvr.Post("/post/login", [&](const Request& req, Response& res) {
             json body = json::parse(req.body);
             if(body.contains("username") && body.contains("password")){
                 try{
                     auto userid = Database.login(body["username"],body["password"]);
+                    string token = tokens.generate_token(userid);
+                    res.set_content(json(
+                                    {
+                                        {"token", token},
+                                        {"usrid", userid}
+                                    }
+                                ).dump(), "application/json");
+                    res.status = OK;
+                }catch(const std::exception& e){
+                    res.status = NOT_FOUND;
                 }
             }
         });
         
-        //Post Source operate
+        //Post Source operation
         seedsvr.Post("/post/source", [&](const Request& req, Response& res) {
             json body = json::parse(req.body);
-            if(body.contains("Operate") 
-            && body["Operate"].is_string()
-            && body.contains("ID")
-            && body["ID"].is_number_unsigned()){
-                res.status = handle_src_operation(body);
-            }else{
+            if (!body.contains("token")) {
+                res.status = NOT_FOUND;
+                return;
+            }
+            if (body.contains("token")
+                && body["token"].is_string()
+                && body.contains("Operation") 
+                && body["Operation"].is_string()
+                && body.contains("ID")
+                && body["ID"].is_number_unsigned()){
+
+                std::string token = body["token"];
+                std::string operation = body["Operation"];
+                unsigned srcid = body["ID"];
+                try{
+                    // src'onwer is not this usr 
+                    // or the token is out of date
+                    if(!tokens.verify_token(body["token"], 
+                                            Database.get_source(srcid).owner)){
+                        throw std::invalid_argument("Invalid token");
+                    }
+                    res.status = handle_src_operation(body);
+                } catch(const std::exception& e) {
+                    res.set_content(json(
+                                    {
+                                        {"error", e.what()}
+                                    }
+                                ).dump(), "application/json");
+                    res.status = NOT_FOUND;
+                }
+            } else {
                 res.status = 404;
             }
         });
 
-        //Post User operate
+        //Post User operation
         seedsvr.Post("/post/user", [&](const Request& req, Response& res) {
             json body = json::parse(req.body);
-            if(body.contains("Operate") 
-            && body["Operate"].is_string()){
+            if(body.contains("Operation") 
+            && body["Operation"].is_string()){
                 res.status = handle_user_operation(body);
             }else{
                 res.status = 404;
             }
         });
 
-        //usr authentic -> update
         std::cout<<"start listening..."<<std::endl;
         seedsvr.listen("0.0.0.0", port);
     }
 
     void handle_src_operation(json body){
         /*TODO: add handler*/
-        if(!(body.contains("Operate") 
-        && body["Operate"].is_string())){
-                return 404;
+        if(!(body.contains("Operation") 
+        && body["Operation"].is_string())){
+                throw std::invalid_argument("Invalid argument");
         }
-        string oper {body["Operate"]};
+        string oper {body["Operation"]};
         if(oper == "Create"){
             //create
             if(!(body.contains("Name") && body.contains("Magnet"))){
-                return 404;
+                throw std::invalid_argument("Invalid argument");
             }else{
                 Database.create_source(string(body["Name"]), string(body["Magnet"]))
             }
         }else if(!body.contains("ID")){
-                return 404;
+                throw std::invalid_argument("Invalid argument");
         }else if(oper == "Update"){
             if(body.contains("Name")){
                 Database.update_src_name(body["ID"], string(body["Name"]));
@@ -134,26 +165,26 @@ public:
                 Database.update_src_magnet(body["ID"], string(body["Magnet"]));
             }
         }else if(oper == "Delete"){
-            Database.delete_source(body["ID"]);
+            Database.delete_src(body["ID"]);
         }
-        return 404;
+        throw std::invalid_argument("Invalid argument");
     }
 
-    status handle_user_operation(json body){
-        if(!(body.contains("Operate") 
-            && body["Operate"].is_string())){
-                return 404;
+    void handle_user_operation(json body){
+        if(!(body.contains("Operation") 
+            && body["Operation"].is_string())){
+                throw std::invalid_argument("Invalid argument");
         }
-        string oper {body["Operate"]};
+        string oper {body["Operation"]};
         if(oper == "Create"){
             //create
             if(!(body.contains("Name") && body.contains("Password"))){
-                return 404;
+                throw std::invalid_argument("Invalid argument");
             }else{
                 Database.create_source(string(body["Name"]), string(body["Password"]));
             }
         }else if(!body.contains("ID")){
-                return 404;
+                throw std::invalid_argument("Invalid argument");
         }else{
             /*TODO: varified id and source owner with token*/
             if(oper == "UpdateUsername"){
@@ -170,7 +201,7 @@ public:
                 }
             }
         }
-        return 404;
+        throw std::invalid_argument("Invalid argument");
     }
 };
 #endif

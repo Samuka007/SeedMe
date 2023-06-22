@@ -88,7 +88,6 @@ class SeedDB : public Data, public User, public Metadata {
             User::setUsername(usrid, username_new);
         }
 
-        //TODO: update password
         inline void update_password(
             unsigned userid,
             std::string_view old_password,
@@ -96,20 +95,22 @@ class SeedDB : public Data, public User, public Metadata {
         ){
             User::setPassword(userid, MD5(old_password).toStr(), MD5(new_password).toStr());
         }
-
-        std::vector<source_t>& get_sources_by_ids(
-            std::vector<unsigned int> id_list
-        ){
-            std::vector<source_t> srcs;
-            for(auto srcid : id_list){
-                srcs.push_back(get_source(srcid));
-            }
-            return srcs;
-        }
         
         void delete_user (unsigned int userid) {
             User::deleteUser(userid);
         }
+
+        // std::vector<unsigned>& get_user_src_ids(unsigned userid){
+            // std::vector<unsigned> srcids;
+            // for(unsigned id=1; id<=Data::get_last_src(); ++id){
+                // if(Data::deleted.contains(id))
+                    // continue;
+                // if(Data::getOwner(id) == userid){
+                    // srcids.push_back(id);
+                // }
+            // }
+            // return srcids;
+        // }
 
         /**
          * SourceController:
@@ -137,6 +138,16 @@ class SeedDB : public Data, public User, public Metadata {
             };
         }
 
+        std::vector<source_t>& get_sources_by_ids(
+            std::vector<unsigned int> id_list
+        ){
+            std::vector<source_t> srcs;
+            for(auto srcid : id_list){
+                srcs.push_back(get_source(srcid));
+            }
+            return srcs;
+        }
+
         void update_src_name(
             unsigned int id,
             std::string_view SrcName
@@ -150,7 +161,7 @@ class SeedDB : public Data, public User, public Metadata {
             Metadata::Log(id, SrcName.data());
         }
         
-        void update_src_mag(
+        void update_src_magnet(
             unsigned int id,
             std::string_view SrcMagnet
         ){
