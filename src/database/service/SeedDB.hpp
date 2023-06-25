@@ -92,7 +92,9 @@ class SeedDB : public Data, public User, public Metadata {
         inline void update_password( unsigned userid,
                                     std::string_view old_password,
                                     std::string_view new_password ) {
-            User::setPassword(userid, MD5(old_password.data()).toStr(), MD5(new_password.data()).toStr());
+            User::setPassword(userid, 
+                                MD5(old_password.data()).toStr(), 
+                                MD5(new_password.data()).toStr());
         }
         
         void delete_user (unsigned int userid) { User::deleteUser(userid); }
@@ -121,8 +123,8 @@ class SeedDB : public Data, public User, public Metadata {
         }
 
         source_t get_source (unsigned srcid) { 
-            if(srcid > Data::table.last_row())      { throw SourceNotFoundError {srcid}; }
-            if(Data::deleted.contains(srcid))  { throw SourceNotFoundError {srcid}; }
+            if(srcid > Data::table.last_row())  { throw SourceNotFoundError {srcid}; }
+            if(Data::deleted.contains(srcid))   { throw SourceNotFoundError {srcid}; }
 
             return source_t {
                 srcid,
@@ -134,7 +136,7 @@ class SeedDB : public Data, public User, public Metadata {
 
         std::vector<source_t> get_sources_by_ids( std::vector<unsigned int> id_list ){
             std::vector<source_t> srcs;
-            for(auto srcid : id_list) { srcs.push_back(get_source(srcid)); }
+            for(auto srcid : id_list)   { srcs.push_back(get_source(srcid)); }
             return srcs;
         }
 
