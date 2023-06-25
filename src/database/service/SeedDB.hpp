@@ -75,6 +75,7 @@ class SeedDB : public Data, public User, public Metadata {
                     }
                 }
             }
+            return 0;
         }
 
         inline unsigned new_user (const user_t& user) {

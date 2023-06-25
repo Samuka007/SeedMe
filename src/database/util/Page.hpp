@@ -18,7 +18,7 @@
 using std::array;
 using std::shared_ptr;
 
-typedef int page_t; // page_t is the number of page
+// typedef int int; // int is the number of page
 
 //Row Type T
 template <typename T>
@@ -28,7 +28,7 @@ class Pager{
         static constexpr int class_size = 32;
         static constexpr int rows_per_page = (page_size-class_size) / sizeof(T);
 
-        Pager(page_t p, shared_ptr<int> f_d)
+        Pager(int p, shared_ptr<int> f_d)
         :p_num(p), file_descriptor(f_d)
         {
             //read in file
@@ -65,10 +65,10 @@ class Pager{
             return call_frequency < p.call_frequency;
         }
 
-        inline page_t page_num() { return p_num; }
+        inline int page_num() { return p_num; }
         
     private:
-        page_t p_num; //number of page
+        int p_num; //number of page
 
         array<T, rows_per_page> rows;
         

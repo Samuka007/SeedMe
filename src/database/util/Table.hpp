@@ -23,15 +23,15 @@ using std::map;
 using std::shared_ptr;
 using std::unique_ptr;
 
-template <class T, class Page = Pager<T>>
+template <class T>
 class Table{
     public:
-        typedef shared_ptr<Page> page_p; //page_p is the pointer to the page
+        typedef shared_ptr<Pager<T>> page_p; //page_p is the pointer to the page
         static constexpr size_t default_buffer_size = 1 /*G*/* 1024 /*M*/* 1024 /*K*/* 1024 /*byte*/;
 
         Table(string_view filename, size_t buffer_size = default_buffer_size)
         : file_descriptor(std::make_shared<int>(open(filename.data(), O_RDWR | O_CREAT, S_IWUSR | S_IRUSR))), 
-            buffer_page_limit( buffer_size / Page::page_size )
+            buffer_page_limit( buffer_size / Pager<T>::page_size )
         {
             if(*file_descriptor == -1){
                 throw FileOpenError(filename.data());
@@ -40,8 +40,8 @@ class Table{
             if(file_length == -1){
                 throw FileError(filename.data());
             }
-            last_row_num = file_length / Page::page_size;
-            //pages = vector<Page> {nullptr};
+            last_row_num = file_length / Pager<T>::page_size;
+            //pages = vector<Pager<T>> {nullptr};
         }
 
         inline unsigned last_row(){
@@ -52,19 +52,19 @@ class Table{
             if(row_num > last_row_num){
                 throw std::out_of_range("Row number out of range");
             }
-            int page_num = row_num / Page::rows_per_page;
+            int page_num = row_num / Pager<T>::rows_per_page;
             page_p page = get_page(page_num);
-            unsigned int row_offset = row_num % Page::rows_per_page - 1;
+            unsigned int row_offset = row_num % Pager<T>::rows_per_page - 1;
             return (*page)[row_offset];
         }
 
-        shared_ptr<Page> get_page(unsigned page_num){
+        shared_ptr<Pager<T>> get_page(unsigned page_num){
             //TODO: Check page_num legal?
             if(!pages.contains(page_num)){ //page is not in memory
                 //read page from file
-                auto temp_page = make_shared<Page>(page_num, file_descriptor);
-                pages[page_num] = make_shared<Page> (temp_page);
-                page_queue.push(make_shared<Page> (temp_page));
+                auto temp_page = make_shared<Pager<T>>(page_num, file_descriptor);
+                pages[page_num] = temp_page;
+                page_queue.push(temp_page);
             }
             if(pages.size() > buffer_page_limit){ //page is out of memory
                 //release page from memory
@@ -75,13 +75,13 @@ class Table{
         }
 
         void new_row(T r){
-            if(last_row_num % Page::rows_per_page == 0){
+            if(last_row_num % Pager<T>::rows_per_page == 0){
                 //create new page
-                auto new_page = make_shared<Page>(last_row_num / Page::rows_per_page, file_descriptor);
-                pages[last_row_num / Page::rows_per_page] = new_page;
+                auto new_page = make_shared<Pager<T>>(last_row_num / Pager<T>::rows_per_page, file_descriptor);
+                pages[last_row_num / Pager<T>::rows_per_page] = new_page;
                 page_queue.push(new_page);
             }
-            (*pages[last_row_num / Page::rows_per_page])[last_row_num % Page::rows_per_page] = r;
+            (*pages[last_row_num / Pager<T>::rows_per_page])[last_row_num % Pager<T>::rows_per_page] = r;
             last_row_num += 1;
         }
         
@@ -90,7 +90,7 @@ class Table{
         shared_ptr<int> file_descriptor;
 
         //buffer for pages, sorted by page number
-        map<page_t, page_p> pages;
+        map<int, page_p> pages;
 
         //buffer list for pages, sorted by call frequency
         priority_queue<page_p> page_queue;

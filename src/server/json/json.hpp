@@ -3,11 +3,12 @@
 #include <map>
 //#include <format>
 #include <vector>
+#include <sstream>
 #include "database/model/struct.hpp"
-#include "util/fmt/format.h"
+//#include "util/fmt/format.h"
 
 using std::string;
-using fmt::format;
+//using std::format;
 using std::map;
 using std::vector;
 using std::move;
@@ -31,18 +32,22 @@ class Json {
         virtual string dump() = 0;
 };
 
+//rewrite using sstream
 class Object_s : public Json {
     public:
         Object_s() = default;
         ~Object_s() = default;
         string dump() override {
-            string result = "{";
+            // rewrite using sstream
+            std::stringstream ss;
+            ss << "{";
             for (auto& [key, value] : this->data) {
                 if (isNumber(value))
-                    result += format("\"{}\": {},", key, value);
+                    ss << "\"" << key << "\":" << value << ",";
                 else
-                    result += format("\"{}\": \"{}\",", key, value);
+                    ss << "\"" << key << "\":\"" << value << "\",";
             }
+            string result {ss.str()};
             result.pop_back();
             result += "}";
             return result;
@@ -61,11 +66,17 @@ class Object : public Json {
         ~Object() = default;
         string dump() override {
             string result = "{";
+            // for (auto& [key, value] : this->data) {
+            //     if (isNumber(value))
+            //         result += format("\"{}\": {},", key, value);
+            //     else
+            //         result += format("\"{}\": \"{}\",", key, value);
+            // }
             for (auto& [key, value] : this->data) {
                 if (isNumber(value))
-                    result += format("\"{}\": {},", key, value);
+                    result += "\"" + key + "\":" + value + ",";
                 else
-                    result += format("\"{}\": \"{}\",", key, value);
+                    result += "\"" + key + "\":\"" + value + "\",";
             }
             result.pop_back();
             result += "}";
@@ -108,7 +119,9 @@ class Body_handler : public Json {
 
         string contains(const string& key) {
             string result = "";
-            string key_ = format("\"{}\":", key);
+            // string key_ = format("\"{}\":", key);
+            // rewrite not using format
+            string key_ = "\"" + key + "\":";
             size_t pos = body.find(key_);
             if (pos != string::npos) {
                 pos += key_.size();
