@@ -10,7 +10,7 @@ struct UsrRow {
         std::copy(_password, _password + LENGTH_OF_PASSWORD, password);
     }
     constexpr static size_t LENGTH_OF_NAME   = 32;
-    constexpr static size_t LENGTH_OF_PASSWORD = 32;
+    constexpr static size_t LENGTH_OF_PASSWORD = 128;
 
     unsigned    id;
     char        username[LENGTH_OF_NAME];

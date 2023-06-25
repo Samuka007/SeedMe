@@ -11,11 +11,13 @@ set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -pthread")
 
 aux_source_directory(src SRCS)
-include_directories(src src/database src/server)
+add_subdirectory(src/encrypt)
+include_directories(src src/database src/server src/encrypt src/util)
 
 add_executable(SeedMe ${SRCS})
 
 target_sources(SeedMe PUBLIC ${sources})
+target_link_libraries(SeedMe PUBLIC md5)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
