@@ -13,7 +13,7 @@
 #include <queue>
 #include <map>
 #include <memory>
-#include "database/util/Page.hpp"
+#include "util/Page.hpp"
 #include "util/ErrorHandler.hpp"
 
 using std::string_view;

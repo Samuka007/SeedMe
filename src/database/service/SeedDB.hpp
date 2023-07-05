@@ -5,12 +5,11 @@
 #include <string>
 #include <utility>
 #include <tuple>
-#include "encrypt/md5.h"
-#include "database/service/Data.hpp"
-#include "database/service/User.hpp"
-#include "database/util/Metadata.hpp"
+#include "service/Data.hpp"
+#include "service/User.hpp"
+#include "util/Metadata.hpp"
 #include "util/ErrorHandler.hpp"
-#include "database/model/struct.hpp"
+#include "model/struct.hpp"
 
 using std::pair;
 using status = size_t;
@@ -62,12 +61,11 @@ class SeedDB : public Data, public User, public Metadata {
         */
         
         unsigned login (const user_t& user) {
-            for(unsigned int id=1; id<this->User::get_last_user(); ++id){
+            for(unsigned int id=1; id<=this->User::get_last_user(); ++id){
                 if(User::deleted.contains(id))
                     continue;
                 if(User::table[id].username == user.usrname){
-                    if(MD5(User::table[id].password).toStr()
-                    == user.password){
+                    if(User::table[id].password == user.password){
                         return id;
                     }
                     else{
@@ -75,7 +73,7 @@ class SeedDB : public Data, public User, public Metadata {
                     }
                 }
             }
-            return 0;
+            throw LoginError(user.usrname);
         }
 
         inline unsigned new_user (const user_t& user) {
@@ -93,23 +91,11 @@ class SeedDB : public Data, public User, public Metadata {
                                     std::string_view old_password,
                                     std::string_view new_password ) {
             User::setPassword(userid, 
-                                MD5(old_password.data()).toStr(), 
-                                MD5(new_password.data()).toStr());
+                                old_password.data(), 
+                                new_password.data());
         }
         
         void delete_user (unsigned int userid) { User::deleteUser(userid); }
-
-        // std::vector<unsigned>& get_user_src_ids(unsigned userid){
-            // std::vector<unsigned> srcids;
-            // for(unsigned id=1; id<=Data::get_last_src(); ++id){
-                // if(Data::deleted.contains(id))
-                    // continue;
-                // if(Data::getOwner(id) == userid){
-                    // srcids.push_back(id);
-                // }
-            // }
-            // return srcids;
-        // }
 
         /**
          * SourceController:
@@ -124,7 +110,7 @@ class SeedDB : public Data, public User, public Metadata {
 
         source_t get_source (unsigned srcid) { 
             if(srcid > Data::table.last_row())  { throw SourceNotFoundError {srcid}; }
-            if(Data::deleted.contains(srcid))   { throw SourceNotFoundError {srcid}; }
+            if(Data::deleted.contains(srcid))   { throw SourceNotFoundError(srcid); }
 
             return source_t {
                 srcid,

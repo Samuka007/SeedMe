@@ -1,2 +1,4 @@
-/.vscode
-/build
+# ignore vscode profile
+/.vscode/
+# ignore build folder
+/build/

@@ -10,6 +10,7 @@
 //#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "server/network/httplib.h"
 #include "encrypt/TokenHandler.hpp"
+#include "encrypt/md5.h"
 #include "server/json/json.hpp"
 #include "util/ErrorHandler.hpp"
 
@@ -179,6 +180,7 @@ public:
             if(body.usr.usrname.empty() || body.usr.password.empty()){
                 throw std::invalid_argument("Invalid argument");
             }else{
+                body.usr.password = MD5(body.usr.password).toStr();
                 Database.new_user(body.usr);
             }
         }else if(body.usrid == 0){
@@ -200,7 +202,7 @@ public:
                 if(body.usr.password.empty() || body.password_old.empty()){
                     throw std::invalid_argument("Invalid argument");
                 }else{
-                    Database.update_password(body.usrid, body.password_old, body.usr.password);
+                    Database.update_password(body.usrid, MD5(body.password_old).toStr(), MD5(body.usr.password).toStr());
                 }
             }
         }

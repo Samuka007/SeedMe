@@ -5,9 +5,9 @@
 #include <exception>
 #include <format>
 #include <vector>
-#include "database/model/Rows.hpp"
-#include "database/util/Table.hpp"
-#include "database/util/Deleted.hpp"
+#include "model/Rows.hpp"
+#include "util/Table.hpp"
+#include "util/Deleted.hpp"
 using std::string;
 using std::string_view;
 

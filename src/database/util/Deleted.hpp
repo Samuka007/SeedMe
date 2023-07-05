@@ -26,6 +26,7 @@ class Deleted{
         Deleted(std::string filename)
         :   filename(filename) {
             filename += ".deleted";
+            deleted_set.clear();
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
             if(file_d == -1){
                 throw "read error.";
@@ -34,13 +35,14 @@ class Deleted{
             if( lseek(file_d, 0, SEEK_SET) == -1){
                 throw "seek error.";
             } 
-            std::array<unsigned int, LIST_LENGTH> buf;
+            std::array<unsigned int, LIST_LENGTH> buf {0};
             if( read(file_d, buf.data(), SIZE_OF_LIST) == -1){
                 throw "read list error.";
             }
             
             close(file_d);
             deleted_set.insert(buf.begin(), buf.end());
+            deleted_set.erase(0);
         }
         ~Deleted(){
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
