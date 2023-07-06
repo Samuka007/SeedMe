@@ -81,6 +81,13 @@ public:
                 }catch(const std::exception& e){
                     res.status = NOT_FOUND;
                 }
+            }else{
+                try{
+                    res.set_content ( String_list(Database.get_tag_list()).dump(), "application/json" );
+                    res.status = OK;
+                }catch(const std::exception& e){
+                    res.status = NOT_FOUND;
+                }
             }
         });
 
@@ -129,6 +136,10 @@ public:
             } catch (const std::exception& e) {
                 res.status = NOT_FOUND;
             }
+        });
+
+        seedsvr.Post("/post/", [&](const Request& req, Response& res) {
+            
         });
 
         std::cout<<"start listening..."<<std::endl;
@@ -208,5 +219,23 @@ public:
         }
         throw std::invalid_argument("Invalid argument");
     }
+
+    /* TODO: add sudoer */
+    /* Sudoer has a constant token which is 114514 by default or decided on started */
+
+    void handle_tag_operation(const tag_operation_t& body) {
+        if(body.oper.empty()){
+            throw std::invalid_argument("Invalid argument");
+        }else if(body.tag.empty()){
+            throw std::invalid_argument("Invalid argument");
+        }else if(body.oper == "Create"){
+            Database.add_tag(body.tag);
+        }else if(body.oper == "Update"){
+            Database.update_tag(body.tag.tagid, body.tag.tagname);
+        }else if(body.oper == "Delete"){
+            Database.delete_tag(body.tag);
+        }else throw std::invalid_argument("Invalid argument");
+    }
+
 };
 #endif

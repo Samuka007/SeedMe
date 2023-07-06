@@ -25,3 +25,8 @@ struct usr_operation_t {
     unsigned usrid;
     user_t usr;
 };
+
+struct tag_operation_t {
+    std::string tag;
+    std::string oper;
+};

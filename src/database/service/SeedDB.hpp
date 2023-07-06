@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 #include <tuple>
-#include "service/Data.hpp"
+#include "service/data.hpp"
 #include "service/User.hpp"
 #include "util/Metadata.hpp"
 #include "util/ErrorHandler.hpp"
@@ -17,12 +17,18 @@ using status = size_t;
 constexpr unsigned int OK = 200;
 constexpr unsigned int NOT_FOUND = 404;
 
-class SeedDB : public Data, public User, public Metadata {
+class SeedDB {
+    private:
+    // change relation ship from "is a" to "has a"
+        Data data;
+        User user;
+        Metadata metadata;
+
     public:
         SeedDB(std::string filename)
-        :   Data(filename + ".data"), 
-            User(filename + ".user"),
-            Metadata(filename + ".meta")
+        :   data(filename + ".data"), 
+            user(filename + ".user"),
+            metadata(filename + ".meta")
         {}
         
         // std::vector<unsigned int> find_src_by_name(std::string_view name){
@@ -32,10 +38,10 @@ class SeedDB : public Data, public User, public Metadata {
 
         bool magnet_exist(std::string_view magnet){
             bool find = false;
-            for(unsigned int i=1;i<Data::table.last_row();++i){
-                if(Data::isDeleted(i))
+            for(unsigned int i=1;i<data.table.last_row();++i){
+                if(data.isDeleted(i))
                     continue;
-                if(Data::getMagnet(i) == magnet){
+                if(data.getMagnet(i) == magnet){
                     find = true;
                     break;
                 }
@@ -45,10 +51,10 @@ class SeedDB : public Data, public User, public Metadata {
 
         bool username_exist(std::string_view username){
             bool find = false;
-            for(unsigned int i=1;i<this->User::get_last_user();++i){
-                if(User::deleted.contains(i))
+            for(unsigned int i=1;i<this->user.get_last_user();++i){
+                if(user.deleted.contains(i))
                     continue;
-                if(User::table[i].username == username){
+                if(user.table[i].username == username){
                     find = true;
                     break;
                 }
@@ -61,11 +67,11 @@ class SeedDB : public Data, public User, public Metadata {
         */
         
         unsigned login (const user_t& user) {
-            for(unsigned int id=1; id<=this->User::get_last_user(); ++id){
-                if(User::deleted.contains(id))
+            for(unsigned int id=1; id<=this->user.get_last_user(); ++id){
+                if(user.deleted.contains(id))
                     continue;
-                if(User::table[id].username == user.usrname){
-                    if(User::table[id].password == user.password){
+                if(user.table[id].username == user.usrname){
+                    if(user.table[id].password == user.password){
                         return id;
                     }
                     else{
@@ -80,22 +86,22 @@ class SeedDB : public Data, public User, public Metadata {
             if(username_exist(user.usrname)) {
                 throw std::invalid_argument("username already exist");
             }
-            return User::addUser(user.usrname, user.password);
+            return user.addUser(user.usrname, user.password);
         }
 
         inline void update_username(unsigned usrid, std::string_view username_new){
-            User::setUsername(usrid, username_new);
+            user.setUsername(usrid, username_new);
         }
 
         inline void update_password( unsigned userid,
                                     std::string_view old_password,
                                     std::string_view new_password ) {
-            User::setPassword(userid, 
+            user.setPassword(userid, 
                                 old_password.data(), 
                                 new_password.data());
         }
         
-        void delete_user (unsigned int userid) { User::deleteUser(userid); }
+        void delete_user (unsigned int userid) { user.deleteUser(userid); }
 
         /**
          * SourceController:
@@ -104,19 +110,19 @@ class SeedDB : public Data, public User, public Metadata {
                                     std::string_view    SrcMagnet,
                                     unsigned            owner ) {
             unsigned srcid = addSrc(SrcName, SrcMagnet, owner);
-            Metadata::Log(srcid, SrcName.data());
+            metadata.Log(srcid, SrcName.data());
             return srcid;
         }
 
         source_t get_source (unsigned srcid) { 
-            if(srcid > Data::table.last_row())  { throw SourceNotFoundError {srcid}; }
-            if(Data::deleted.contains(srcid))   { throw SourceNotFoundError(srcid); }
+            if(srcid > data.table.last_row())  { throw SourceNotFoundError {srcid}; }
+            if(data.deleted.contains(srcid))   { throw SourceNotFoundError(srcid); }
 
             return source_t {
                 srcid,
-                Data::table[srcid].name,
-                Data::table[srcid].magnet,
-                Data::table[srcid].owner
+                data.table[srcid].name,
+                data.table[srcid].magnet,
+                data.table[srcid].owner
             };
         }
 
@@ -127,30 +133,30 @@ class SeedDB : public Data, public User, public Metadata {
         }
 
         void update_src_name ( unsigned int id, std::string_view SrcName ) { 
-            if(Data::deleted.contains(id))  { throw SourceNotFoundError {}; }
+            if(data.deleted.contains(id))  { throw SourceNotFoundError {}; }
             
-            std::strcpy(Data::table[id].name, SrcName.data());
-            Metadata::Delete(id);
-            Metadata::Log(id, SrcName.data());
+            std::strcpy(data.table[id].name, SrcName.data());
+            metadata.Delete(id);
+            metadata.Log(id, SrcName.data());
         }
         
         void update_src_magnet ( unsigned int id, std::string_view SrcMagnet){
-            if(Data::deleted.contains(id))  { throw SourceNotFoundError {};}
+            if(data.deleted.contains(id))  { throw SourceNotFoundError {};}
 
-            Data::setMagnet(id, SrcMagnet);
+            data.setMagnet(id, SrcMagnet);
         }
 
         void delete_src ( unsigned int id ) {
-            Data::deleted.insert(id);
-            Metadata::Delete(id);
+            data.deleted.insert(id);
+            metadata.Delete(id);
         }
 
         std::vector<source_t> get_usr_src_list( unsigned userid ) {
             std::vector<source_t> srcs;
-            for(unsigned id=1; id <= Data::get_last_src(); ++id ){
-                if(Data::deleted.contains(id))
+            for(unsigned id=1; id <= data.get_last_src(); ++id ){
+                if(data.deleted.contains(id))
                     continue;
-                if( Data::table[id].owner == userid ) {
+                if( data.table[id].owner == userid ) {
                     srcs.push_back(move(get_source(id)));
                 }
             }
@@ -166,6 +172,30 @@ class SeedDB : public Data, public User, public Metadata {
                 srcs.push_back(get_source(srcid));
             }
             return srcs;
+        }
+
+        /**
+         * MetadataController:
+        */
+
+        inline void add_tag ( unsigned int srcid, std::string_view tag ) {
+            metadata.AddTag(srcid, tag.data());
+        }
+
+        inline void delete_tag ( std::string_view tag ) {
+            metadata.remove_tag(tag.data());
+        }
+
+        inline std::vector<std::string> get_tags () {
+            return metadata.get_tag_list();
+        }
+        
+        inline std::vector<unsigned> get_ids_by_tag ( std::string_view tag ) {
+            return metadata.get_ids_by_tag(tag.data());
+        }
+
+        inline std::vector<source_t> get_src_by_tag ( std::string_view tag ) {
+            return get_src_by_ids(get_ids_by_tag(tag));
         }
 };
 #endif

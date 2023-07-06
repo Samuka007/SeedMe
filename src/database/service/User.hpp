@@ -42,7 +42,7 @@ class User {
         std::strcpy(table[id].password, password_new.data());
     }
 
-    void deleteUser(unsigned id) {
+    inline void deleteUser(unsigned id) {
         deleted.insert(id);
     }
 

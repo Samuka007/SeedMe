@@ -12,7 +12,7 @@ using std::move;
 
 class FileError : public std::exception {
     public:
-        FileError(std::string filename) 
+        FileError(std::string filename = "") 
         :   m_filename { move(filename) }, 
             m_message { std::format("File error: {}.\nErrno: {}", m_filename, std::strerror(errno)) } {}
         const char* what() const noexcept override { return m_message.c_str();}
@@ -70,7 +70,7 @@ class SourceNotFoundError : public SourceError {
 
 class LoginError : public exception {
     public:
-        LoginError(string username) : m_username {move(username)} {
+        LoginError(string username = "") : m_username {move(username)} {
             setMessage(std::format("Login Error! Username: {}", m_username));
         }
         const char* what() const noexcept override { return m_message.c_str();}

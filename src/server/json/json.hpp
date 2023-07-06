@@ -167,6 +167,13 @@ class Body_handler : public Json {
             return result;
         }
 
+        tag_operation_t parse_to_tag_operation( string su_token = "114514" ) {
+            if(contains("Token") == su_token) {
+                return {contains("Tag"), contains("Operation")};
+            }
+            throw LoginError("sudoer error login");
+        }
+
     private:
         string body;
 };
@@ -187,6 +194,50 @@ class login_response : public Json {
         string token;
         unsigned usrid;
 };
+
+// T is dumpable
+class String_list : public Json {
+    public:
+        String_list() = default;
+        ~String_list() = default;
+        String_list(vector<string> src) : data{src} {}
+
+        string dump() override {
+            string result = "[";
+            for (auto& value : this->data) {
+                result += "\"" + value + "\",";
+            }
+            result.pop_back();
+            result += "]";
+            return result;
+        }
+
+        void add(string value) {
+            this->data.push_back(value);
+        }
+    private:
+        vector<string> data;
+};
+
+template <typename T>
+class Json_list : public Json {
+    public:
+        Json_list(vector<T> src) : data{src} {}
+
+        string dump() override {
+            string result = "[";
+            for (auto& value : this->data) {
+                result += value.dump();
+                result += ",";
+            }
+            result.pop_back();
+            result += "]";
+            return result;
+        }
+
+    private:
+        vector<T> data;
+}
 
 class List_for_src : public Json{
     public:
@@ -212,4 +263,15 @@ class List_for_src : public Json{
         }
     private:
         vector<source_t> data;
+};
+
+class Json_tag : public Json {
+    public:
+    Json_tag() = default;
+    Json_tag(string tag) : tag(tag) {}
+    string dump() override {
+        return tag;
+    }
+    private:
+        string tag;
 };

@@ -35,8 +35,7 @@ class Pager{
             lseek(*file_descriptor, p_num * page_size, SEEK_SET);
             ssize_t bytes_read = read(*file_descriptor, this, page_size);
             if(bytes_read == -1){
-                std::cerr<< "Error reading file: " << errno << std::endl;
-                exit(EXIT_FAILURE);
+                throw FileError();
             }
         }
 
@@ -45,8 +44,7 @@ class Pager{
             lseek(*file_descriptor, p_num * page_size, SEEK_SET);
             ssize_t bytes_written = write(*file_descriptor, this, page_size);
             if(bytes_written == -1){
-                std::cerr<< "Error writing file: " << errno << std::endl;
-                exit(EXIT_FAILURE);
+                throw FileError();
             }
         }
 
