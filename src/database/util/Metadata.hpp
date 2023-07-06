@@ -95,38 +95,38 @@ class Metadata {
         ~Metadata(){
             ssize_t file_d = open(filename.c_str(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
             //file readin
-            if(file_d == -1){
-                throw FileOpenError {filename};
-            }
+            // if(file_d == -1){
+            //     throw FileOpenError {filename};
+            // }
 
-            if(lseek(file_d, 0, SEEK_SET) == -1){
-                throw FileError {filename};
-            }
+            // if(lseek(file_d, 0, SEEK_SET) == -1){
+            //     throw FileError {filename};
+            // }
 
             ssize_t rd = 1;
             for(auto pair : tag_map){
                 std::array<char, SIZE_OF_NAME> name {0};
                 std::copy(pair.first.begin(), pair.first.end(), name.begin());
                 rd = write(file_d, name.data(), SIZE_OF_NAME);
-                if(rd == -1){
-                    throw FileReadError {filename};
-                }
+                // if(rd == -1){
+                //     throw FileReadError {filename};
+                // }
                 if(rd == 0){
                     break;
                 }
                 std::array<unsigned int, SIZE_OF_LIST> list {0};
                 std::copy(pair.second.begin(), pair.second.end(), list.begin());
                 rd = read(file_d, list.data(), SIZE_OF_LIST);
-                if(rd == -1){
-                    throw FileReadError {filename};
-                }
+                // if(rd == -1){
+                //     throw FileReadError {filename};
+                // }
                 if(rd == 0){
                     break;
                 }
             }
-            if(close(file_d) == -1){
-                throw FileError {filename};
-            }
+            // if(close(file_d) == -1){
+            //     throw FileError {filename};
+            // }
         }
 
         // void Reflash(Table<SrcRow> &table){

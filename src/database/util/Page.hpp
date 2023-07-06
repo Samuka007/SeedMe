@@ -43,9 +43,9 @@ class Pager{
             //write back to file
             lseek(*file_descriptor, p_num * page_size, SEEK_SET);
             ssize_t bytes_written = write(*file_descriptor, this, page_size);
-            if(bytes_written == -1){
-                throw FileError();
-            }
+            // if(bytes_written == -1){
+            //     throw FileError();
+            // }
         }
 
         T& operator[] (int row_num) {
