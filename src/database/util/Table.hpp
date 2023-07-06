@@ -30,7 +30,9 @@ class Table{
         static constexpr size_t default_buffer_size = 1 /*G*/* 1024 /*M*/* 1024 /*K*/* 1024 /*byte*/;
 
         Table(string_view filename, size_t buffer_size = default_buffer_size)
-        : file_descriptor(std::make_shared<int>(open(filename.data(), O_RDWR | O_CREAT, S_IWUSR | S_IRUSR))), 
+        : file_descriptor(std::make_shared<int>(
+                            open(filename.data(), O_RDWR | O_CREAT, S_IWUSR | S_IRUSR)
+                        )), 
             buffer_page_limit( buffer_size / Pager<T>::page_size )
         {
             if(*file_descriptor == -1){
@@ -74,14 +76,16 @@ class Table{
             return pages[page_num];
         }
 
-        void new_row(T r){
+        void new_row(T row){
             if(last_row_num % Pager<T>::rows_per_page == 0){
                 //create new page
-                auto new_page = make_shared<Pager<T>>(last_row_num / Pager<T>::rows_per_page, file_descriptor);
+                auto new_page = make_shared<Pager<T>>(
+                                    last_row_num / Pager<T>::rows_per_page, file_descriptor
+                                );
                 pages[last_row_num / Pager<T>::rows_per_page] = new_page;
                 page_queue.push(new_page);
             }
-            (*pages[last_row_num / Pager<T>::rows_per_page])[last_row_num % Pager<T>::rows_per_page] = r;
+            (*pages[last_row_num / Pager<T>::rows_per_page])[last_row_num % Pager<T>::rows_per_page] = row;
             last_row_num += 1;
         }
         
