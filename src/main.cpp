@@ -1,5 +1,5 @@
-#include "src/server/Seedme.hpp"
-#include "src/server/Loadin.hpp"
+#include "server/Seedme.hpp"
+#include "server/Loadin.hpp"
 
 int main( int argc, char* argv[] ){
     SeedSvr::init(argc, argv);
