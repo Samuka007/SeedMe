@@ -5,7 +5,7 @@
 #include <string>
 #include <utility>
 #include <tuple>
-#include "service/data.hpp"
+#include "service/Data.hpp"
 #include "service/User.hpp"
 #include "util/Metadata.hpp"
 #include "util/ErrorHandler.hpp"
@@ -66,27 +66,27 @@ class SeedDB {
          * UserController
         */
         
-        unsigned login (const user_t& user) {
+        unsigned login (const user_t& _user) {
             for(unsigned int id=1; id<=this->user.get_last_user(); ++id){
                 if(user.deleted.contains(id))
                     continue;
-                if(user.table[id].username == user.usrname){
-                    if(user.table[id].password == user.password){
+                if(user.table[id].username == _user.usrname){
+                    if(user.table[id].password == _user.password){
                         return id;
                     }
                     else{
-                        throw LoginError(user.usrname);
+                        throw LoginError(_user.usrname);
                     }
                 }
             }
-            throw LoginError(user.usrname);
+            throw LoginError(_user.usrname);
         }
 
-        inline unsigned new_user (const user_t& user) {
-            if(username_exist(user.usrname)) {
+        inline unsigned new_user (const user_t& _user) {
+            if(username_exist(_user.usrname)) {
                 throw std::invalid_argument("username already exist");
             }
-            return user.addUser(user.usrname, user.password);
+            return user.addUser(_user.usrname, _user.password);
         }
 
         inline void update_username(unsigned usrid, std::string_view username_new){
@@ -109,7 +109,7 @@ class SeedDB {
         unsigned int create_source( std::string_view    SrcName,
                                     std::string_view    SrcMagnet,
                                     unsigned            owner ) {
-            unsigned srcid = addSrc(SrcName, SrcMagnet, owner);
+            unsigned srcid = data.addSrc(SrcName, SrcMagnet, owner);
             metadata.Log(srcid, SrcName.data());
             return srcid;
         }
@@ -178,15 +178,15 @@ class SeedDB {
          * MetadataController:
         */
 
-        inline void add_tag ( unsigned int srcid, std::string_view tag ) {
-            metadata.AddTag(srcid, tag.data());
+        inline void add_tag ( std::string_view tag ) {
+            metadata.add_tag(tag.data());
         }
 
         inline void delete_tag ( std::string_view tag ) {
             metadata.remove_tag(tag.data());
         }
 
-        inline std::vector<std::string> get_tags () {
+        inline std::vector<std::string> get_tag_list () {
             return metadata.get_tag_list();
         }
         

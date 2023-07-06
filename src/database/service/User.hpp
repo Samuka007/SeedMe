@@ -27,7 +27,7 @@ class User {
     
     void setUsername(unsigned id, string_view username) {
         if (username.size() > UsrRow::LENGTH_OF_NAME) {
-            throw std::invalid_argument(std::format("Username should less than {}.", UsrRow::LENGTH_OF_NAME));
+            throw std::invalid_argument("Username too long");
         }
         std::strcpy(table[id].username, username.data());
     }
@@ -37,7 +37,7 @@ class User {
             throw PasswordIncorrectError();
         }
         if (password_new.size() > UsrRow::LENGTH_OF_PASSWORD) {
-            throw std::invalid_argument(std::format("Password should less than {}.", UsrRow::LENGTH_OF_NAME));
+            throw std::invalid_argument("Username too long");
         }
         std::strcpy(table[id].password, password_new.data());
     }

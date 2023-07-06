@@ -230,12 +230,9 @@ public:
             throw std::invalid_argument("Invalid argument");
         }else if(body.oper == "Create"){
             Database.add_tag(body.tag);
-        }else if(body.oper == "Update"){
-            Database.update_tag(body.tag.tagid, body.tag.tagname);
         }else if(body.oper == "Delete"){
             Database.delete_tag(body.tag);
         }else throw std::invalid_argument("Invalid argument");
     }
-
 };
 #endif

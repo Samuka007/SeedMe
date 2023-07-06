@@ -237,7 +237,7 @@ class Json_list : public Json {
 
     private:
         vector<T> data;
-}
+};
 
 class List_for_src : public Json{
     public:
