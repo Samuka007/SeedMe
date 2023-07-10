@@ -23,11 +23,11 @@ using std::map;
 using std::shared_ptr;
 using std::unique_ptr;
 
+static size_t default_buffer_size = 1 /*G*/* 1024 /*M*/* 1024 /*K*/* 1024 /*byte*/;
 template <class T>
 class Table{
     public:
         typedef shared_ptr<Pager<T>> page_p; //page_p is the pointer to the page
-        static constexpr size_t default_buffer_size = 1 /*G*/* 1024 /*M*/* 1024 /*K*/* 1024 /*byte*/;
 
         Table(string_view filename, size_t buffer_size = default_buffer_size)
         : file_descriptor(std::make_shared<int>(

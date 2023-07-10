@@ -113,6 +113,7 @@ public:
         // if call delete, then id is needed
         seedsvr.Post("/post/user", [&](const Request& req, Response& res) {
             try{
+                std::cout << req.body << std::endl;
                 auto handle = api::usr_handler(req.body, Database, tokens);
                 res.set_content (handle.dump(), "application/json");
                 res.status = handle.status();
@@ -129,6 +130,7 @@ public:
         // if call delete, then id is needed
         seedsvr.Post("/post/source", [&](const Request& req, Response& res) {
             try{
+                std::cout << req.body << std::endl;
                 auto handle = api::src_handler(req.body, Database, tokens);
                 res.set_content (handle.dump(), "application/json");
                 res.status = handle.status();
@@ -141,6 +143,7 @@ public:
         // ID and token are needed
         seedsvr.Post("/post/", [&](const Request& req, Response& res) {
             try{
+                std::cout << req.body << std::endl;
                 auto handle = api::tag_handler(req.body, Database, tokens);
                 res.set_content (handle.dump(), "application/json");
                 res.status = handle.status();
@@ -156,8 +159,9 @@ public:
             // std::cout << Database.create_source("test", "magnet", userid) << std::endl;
         }
 
-        std::cout<<"start listening..."<<std::endl;
+        std::cout<<"start listening on " << port <<std::endl;
         seedsvr.listen("0.0.0.0", port);
+        
     }
 };
 #endif

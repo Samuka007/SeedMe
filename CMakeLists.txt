@@ -15,13 +15,9 @@ add_subdirectory(src/encrypt)
 include_directories(src src/database src/server src/encrypt src/util src/include)
 
 add_executable(SeedMe src/main.cpp)
-add_executable(Testme src/test.cpp)
 
 target_sources(SeedMe PUBLIC ${sources})
 target_link_libraries(SeedMe PUBLIC md5)
-
-target_sources(Testme PUBLIC ${sources})
-target_link_libraries(Testme PUBLIC md5)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
