@@ -64,8 +64,9 @@ class Table{
             //TODO: Check page_num legal?
             if(!pages.contains(page_num)){ //page is not in memory
                 //read page from file
-                auto temp_page = make_shared<Pager<T>>(page_num, file_descriptor);
-                pages[page_num] = temp_page;
+                shared_ptr<Pager<T>> temp_page = make_shared<Pager<T>>(page_num, file_descriptor);
+                // pages[page_num] = temp_page;
+                pages.emplace(page_num, temp_page);
                 page_queue.push(temp_page);
             }
             if(pages.size() > buffer_page_limit){ //page is out of memory
@@ -85,7 +86,8 @@ class Table{
                 pages[last_row_num / Pager<T>::rows_per_page] = new_page;
                 page_queue.push(new_page);
             }
-            (*pages[last_row_num / Pager<T>::rows_per_page])[last_row_num % Pager<T>::rows_per_page] = row;
+            // (*pages[last_row_num / Pager<T>::rows_per_page])[last_row_num % Pager<T>::rows_per_page] = row;
+            (*this)[last_row_num] = row;
             last_row_num += 1;
         }
         

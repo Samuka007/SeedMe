@@ -7,12 +7,12 @@
 ###
 # 1. Create user
 
-POST http://127.0.0.1:1234/post/user
+POST http://127.0.0.1:12345/post/user
 content-type: application/json
 
 {
     "operation": "create",
-    "username": "test",
+    "username": "test2",
     "password": "password1"
 }
 
@@ -22,11 +22,11 @@ content-type: application/json
 ###
 # 2. Login
 
-POST http://192.168.6.10:1234/post/user
+POST http://127.0.0.1:12345/post/user
 content-type: application/json
 
 {
-    "operation": "login",
+    "operation": "read",
     "username": "test",
     "password": "password1"
 }
@@ -37,57 +37,58 @@ content-type: application/json
 ###
 # 3. Update username or password
 ### password
-POST http://192.168.6.10:1234/post/user
+POST http://127.0.0.1:12345/post/user
 content-type: application/json
 
 {
-    "ID": ,
-    "token": ,
+    "ID": 1,
+    "token": "123123",
     "operation": "update",
     "password": "password_new",
     "old_password": "password1"
 }
 ### username
-POST http://192.168.6.10:1234/post/user
+POST http://127.0.0.1:12345/post/user
 content-type: application/json
 
 {
-    "ID": ,
-    "token": ,
+    "ID": 1,
+    "token": "123123",
     "operation": "update",
     "username": "test_new"
 }
 
 ###
 # 4. Delete user
-POST http://192.168.6.10:1234/post/user
+POST http://127.0.0.1:12345/post/user
 content-type: application/json
 
 {
-    "ID": ,
-    "token": 
+    "operation": "delete",
+    "ID": 1,
+    "token": "123123"
 }
 
 ###
 # 5. Read Source (read from file)
-GET http://192.168.6.10:1234/get/source/1
+GET http://127.0.0.1:12345/get/source/1
 
 ###
 # 6. Create Source
-POST http://192.168.6.10:1234/post/source
+POST http://127.0.0.1:12345/post/source
 content-type: application/json
 
 {
     "operation": "create",
-    "token":,
-    "owner":,
-    "name": "src1",
+    "token":"123123",
+    "owner":2,
+    "name": "src2",
     "magnet": "any:??"
 }
 
 ###
 # 7. Update Source
-POST http://192.168.6.10:1234/post/source
+POST http://127.0.0.1:12345/post/source
 content-type: application/json
 
 {
@@ -100,7 +101,7 @@ content-type: application/json
 
 ###
 # 8. Delete Source
-POST http://192.168.6.10:1234/post/source
+POST http://127.0.0.1:12345/post/source
 content-type: application/json
 
 {
@@ -111,7 +112,7 @@ content-type: application/json
 
 ###
 # 9. Create tag
-POST http://192.168.6.10:1234/post/tag
+POST http://127.0.0.1:12345/post/tag
 content-type: application/json
 
 {
@@ -123,7 +124,7 @@ content-type: application/json
 
 ###
 # 10. Delete tag
-POST http://192.168.6.10:1234/post/tag
+POST http://127.0.0.1:12345/post/tag
 content-type: application/json
 
 {
@@ -135,12 +136,16 @@ content-type: application/json
 
 ###
 # 11. get srcs by user
-GET http://192.168.6.10:1234/get/user/1
+GET http://127.0.0.1:12345/get/user/1
 
 ###
 # 12. get tag list
-GET http://192.168.6.10:1234/get/taglist
+GET http://127.0.0.1:12345/get/taglist
 
 ###
 # 13. get srcs by tag
-GET http://192.168.6.10:1234/get/taglist?=
+GET http://127.0.0.1:12345/get/taglist?=
+
+###
+# 14. close server
+GET http://127.0.0.1:12345/stop

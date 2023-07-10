@@ -152,6 +152,9 @@ public:
             }
         });
 
+        seedsvr.Get("/stop", [&](const Request& req, Response& res) {
+            seedsvr.stop();
+        });
 
         if(debug == 1){
             int userid = Database.new_user("admin", "admin");

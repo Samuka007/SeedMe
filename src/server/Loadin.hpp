@@ -56,7 +56,10 @@ namespace SeedSvr {
             }
             db_name = arg[0];
         }
-        if(port > 1000 || port < 65535) {
+        if (debug) {
+            Seedme seedsvr("try", 12345);
+        }
+        else if(port > 1000 && port < 65535) {
             Seedme seedsvr(db_name, port);
         }else{
             Seedme seedsvr(db_name);
