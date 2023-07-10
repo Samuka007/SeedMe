@@ -7,8 +7,9 @@
 #include <string_view>
 #include <map>
 #include "database/service/SeedDB.hpp"
+#include "server/api.hpp"
 //#define CPPHTTPLIB_OPENSSL_SUPPORT
-#include "server/network/httplib.h"
+#include "include/httplib/httplib.h"
 #include "encrypt/TokenHandler.hpp"
 #include "encrypt/md5.h"
 #include "server/json/json.hpp"
@@ -33,7 +34,7 @@ private:
     TokenHandler tokens;
 
 public:
-    Seedme(string database_name, size_t port = 8080)
+    Seedme(string database_name, size_t port = 8080, int debug = 0)
     : Database(database_name), tokens(Database)
     {
         /**
@@ -41,9 +42,9 @@ public:
         */
 
         // Default page
-        // seedsvr.Get("/", [](const Request &, Response &res) {
-            // res.set_content("Hello SeedMe!", "text/plain");
-        // });
+        seedsvr.Get("/hello", [](const Request &, Response &res) {
+            res.set_content("Hello SeedMe!", "text/plain");
+        });
 
         //Get Source by id
         seedsvr.Get(R"(/get/source/(\d+))", [&](const Request& req, Response& res) {
@@ -130,6 +131,7 @@ public:
         // if call delete, then id is needed
         seedsvr.Post("/post/user", [&](const Request& req, Response& res) {
             auto body = Body_handler(req.body).parse_to_usr_operation();
+            std::cout << "get user oper" << std::endl;
             try{
                 handle_user_operation(body);
                 res.status = OK;
@@ -138,9 +140,15 @@ public:
             }
         });
 
-        seedsvr.Post("/post/", [&](const Request& req, Response& res) {
+        // Post Tag operation
+        // seedsvr.Post("/post/", [&](const Request& req, Response& res) {
             
-        });
+        // });
+        if(debug == 1){
+            int userid = Database.new_user(user_t("admin", "admin"));
+            std::cout << userid << std::endl;
+            std::cout << Database.create_source("test", "magnet", userid) << std::endl;
+        }
 
         std::cout<<"start listening..."<<std::endl;
         seedsvr.listen("0.0.0.0", port);

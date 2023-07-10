@@ -49,6 +49,6 @@ namespace SeedSvr {
             }
             db_name = arg[0];
         }
-        Seedme seed(db_name);
+        Seedme seed("try", 8080, 1);
     }
 };

@@ -66,27 +66,27 @@ class SeedDB {
          * UserController
         */
         
-        unsigned login (const user_t& _user) {
+        unsigned login (string_view username, string_view password) {
             for(unsigned int id=1; id<=this->user.get_last_user(); ++id){
                 if(user.deleted.contains(id))
                     continue;
-                if(user.table[id].username == _user.usrname){
-                    if(user.table[id].password == _user.password){
+                if(user.table[id].username == username){
+                    if(user.table[id].password == password){
                         return id;
                     }
                     else{
-                        throw LoginError(_user.usrname);
+                        throw LoginError(username);
                     }
                 }
             }
-            throw LoginError(_user.usrname);
+            throw LoginError(username);
         }
 
-        inline unsigned new_user (const user_t& _user) {
-            if(username_exist(_user.usrname)) {
+        inline unsigned new_user (string_view username, string_view password) {
+            if(username_exist(username)) {
                 throw std::invalid_argument("username already exist");
             }
-            return user.addUser(_user.usrname, _user.password);
+            return user.addUser(username, password);
         }
 
         inline void update_username(unsigned usrid, std::string_view username_new){

@@ -97,10 +97,11 @@ class Json_src : public Json {
         Json_src() = default;
         string dump() override {
             string result = "{";
-            result += "\"ID\":";result += data.srcid;
+            // number id to string
+            result += "\"ID\":";result += std::to_string(data.srcid);
             result += ",\"Name\":\"";result += data.srcname;
             result += "\",\"Magnet\":\"";result += data.magnet;
-            result += "\",\"Owner\":";result += data.owner;
+            result += "\",\"Owner\":";result += std::to_string(data.owner);
             result += "}";
             return result;
         }
@@ -161,7 +162,7 @@ class Body_handler : public Json {
             usr_operation_t result;
             result.token = contains("Token");
             result.oper = contains("Operation");
-            result.usrid = (contains("ID") == "" ? std::stol(contains("ID")) : 0);
+            result.usrid = (contains("ID") == "" ? 0 : std::stoul(contains("ID")));
             result.usr = parse_to_user();
             result.password_old = contains("Password_old");
             return result;
