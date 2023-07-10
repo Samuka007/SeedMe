@@ -78,7 +78,7 @@ class Table{
         }
 
         void new_row(T row){
-            if(last_row_num % Pager<T>::rows_per_page == 0 || last_row_num == 0){
+            if(last_row_num % Pager<T>::rows_per_page == 0 ){
                 //create new page
                 auto new_page = make_shared<Pager<T>>(
                                     last_row_num / Pager<T>::rows_per_page, file_descriptor
