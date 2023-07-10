@@ -1,11 +1,9 @@
 #pragma once
 #include <string>
 #include <map>
-//#include <format>
 #include <vector>
 #include <sstream>
-#include "database/model/struct.hpp"
-//#include "util/fmt/format.h"
+// #include "database/model/struct.hpp"
 
 using std::string;
 //using std::format;
@@ -98,7 +96,7 @@ class Json_src : public Json {
         string dump() override {
             string result = "{";
             // number id to string
-            result += "\"ID\":";result += std::to_string(data.srcid);
+            result += "\"ID\":";result += std::to_string(data.ID);
             result += ",\"Name\":\"";result += data.srcname;
             result += "\",\"Magnet\":\"";result += data.magnet;
             result += "\",\"Owner\":";result += std::to_string(data.owner);
@@ -134,46 +132,46 @@ class Body_handler : public Json {
             return result;
         }
 
-        source_t parse_to_source() {
-            source_t result;
-            result.srcid = (contains("ID") == "" ? std::stol(contains("ID")) : 0);
-            result.srcname = contains("Name");
-            result.magnet = contains("Magnet");
-            result.owner = (contains("ID") == "" ? std::stol(contains("Owner")) : 0);
-            return result;
-        }
+        // source_t parse_to_source() {
+        //     source_t result;
+        //     result.ID = (contains("ID") == "" ? std::stol(contains("ID")) : 0);
+        //     result.srcname = contains("Name");
+        //     result.magnet = contains("Magnet");
+        //     result.owner = (contains("ID") == "" ? std::stol(contains("Owner")) : 0);
+        //     return result;
+        // }
 
-        user_t parse_to_user() {
-            user_t result;
-            result.usrname = contains("Username");
-            result.password = contains("Password");
-            return result;
-        }
+        // user_t parse_to_user() {
+        //     user_t result;
+        //     result.usrname = contains("Username");
+        //     result.password = contains("Password");
+        //     return result;
+        // }
 
-        src_operation_t parse_to_src_operation() {
-            src_operation_t result;
-            result.token = contains("Token");
-            result.oper = contains("Operation");
-            result.src = parse_to_source();
-            return result;
-        }
+        // src_operation_t parse_to_src_operation() {
+        //     src_operation_t result;
+        //     result.token = contains("Token");
+        //     result.oper = contains("Operation");
+        //     result.src = parse_to_source();
+        //     return result;
+        // }
 
-        usr_operation_t parse_to_usr_operation() {
-            usr_operation_t result;
-            result.token = contains("Token");
-            result.oper = contains("Operation");
-            result.usrid = (contains("ID") == "" ? 0 : std::stoul(contains("ID")));
-            result.usr = parse_to_user();
-            result.password_old = contains("Password_old");
-            return result;
-        }
+        // usr_operation_t parse_to_usr_operation() {
+        //     usr_operation_t result;
+        //     result.token = contains("Token");
+        //     result.oper = contains("Operation");
+        //     result.usrid = (contains("ID") == "" ? 0 : std::stoul(contains("ID")));
+        //     result.usr = parse_to_user();
+        //     result.password_old = contains("Password_old");
+        //     return result;
+        // }
 
-        tag_operation_t parse_to_tag_operation( string su_token = "114514" ) {
-            if(contains("Token") == su_token) {
-                return {contains("Tag"), contains("Operation")};
-            }
-            throw LoginError("sudoer error login");
-        }
+        // tag_operation_t parse_to_tag_operation( string su_token = "114514" ) {
+        //     if(contains("Token") == su_token) {
+        //         return {contains("Tag"), contains("Operation")};
+        //     }
+        //     throw LoginError("sudoer error login");
+        // }
 
     private:
         string body;

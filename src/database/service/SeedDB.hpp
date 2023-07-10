@@ -9,13 +9,13 @@
 #include "service/User.hpp"
 #include "util/Metadata.hpp"
 #include "util/ErrorHandler.hpp"
-#include "model/struct.hpp"
 
 using std::pair;
 using status = size_t;
 
 constexpr unsigned int OK = 200;
 constexpr unsigned int NOT_FOUND = 404;
+
 
 class SeedDB {
     private:
@@ -74,12 +74,9 @@ class SeedDB {
                     if(user.table[id].password == password){
                         return id;
                     }
-                    else{
-                        throw LoginError(username);
-                    }
                 }
             }
-            throw LoginError(username);
+            throw LoginError(username.data());
         }
 
         inline unsigned new_user (string_view username, string_view password) {

@@ -1,6 +1,14 @@
 #ifndef Rows_hpp
 #define Rows_hpp
 #include <bitset>
+#include <string>
+
+struct source_t {
+    unsigned ID; 
+    std::string srcname; 
+    std::string magnet; 
+    unsigned owner;
+};
 
 struct UsrRow {
     UsrRow() = default;
