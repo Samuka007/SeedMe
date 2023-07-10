@@ -42,7 +42,7 @@ class Table{
             if(file_length == -1){
                 throw FileError(filename.data());
             }
-            last_row_num = file_length / Pager<T>::page_size;
+            last_row_num = file_length / sizeof(T);
             //pages = vector<Pager<T>> {nullptr};
         }
 
@@ -65,8 +65,8 @@ class Table{
             if(!pages.contains(page_num)){ //page is not in memory
                 //read page from file
                 shared_ptr<Pager<T>> temp_page = make_shared<Pager<T>>(page_num, file_descriptor);
-                // pages[page_num] = temp_page;
-                pages.emplace(page_num, temp_page);
+                pages[page_num] = temp_page;
+                // pages.emplace(page_num, temp_page);
                 page_queue.push(temp_page);
             }
             if(pages.size() > buffer_page_limit){ //page is out of memory
@@ -78,7 +78,7 @@ class Table{
         }
 
         void new_row(T row){
-            if(last_row_num % Pager<T>::rows_per_page == 0){
+            if(last_row_num % Pager<T>::rows_per_page == 0 || last_row_num == 0){
                 //create new page
                 auto new_page = make_shared<Pager<T>>(
                                     last_row_num / Pager<T>::rows_per_page, file_descriptor

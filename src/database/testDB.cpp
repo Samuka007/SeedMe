@@ -18,7 +18,7 @@ using std::endl;
 using std::string;
 
 void test_origin() {
-    SeedDB db("test");
+    SeedDB db("test1");
 
 // test user functions
 
