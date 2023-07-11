@@ -21,30 +21,27 @@ void test_origin() {
     SeedDB db("test");
 
 // test user functions
-    user_t user1 = {"user1", "password1"};
-    user_t user2 = {"user2", "password2"};
-    user_t user3 = {"user3", "password3"};
 
-    db.new_user(user1);
-    db.new_user(user2);
-    db.new_user(user3);
+    db.new_user("user1", "password1");
+    db.new_user("user2", "password2");
+    db.new_user("user3", "password3");
 
     try{
-        db.new_user(user1);
+        db.new_user("user1", "password1");
     }catch(const std::exception& e){
         cout << e.what() << endl;
     }
     // should throw exception
 
-    auto userid1 = db.login(user1);
-    auto userid2 = db.login(user2);
-    auto userid3 = db.login(user3);
+    auto userid1 = db.login("user1", "password1");
+    auto userid2 = db.login("user2", "password2");
+    auto userid3 = db.login("user3", "password3");
 
     db.update_username(userid1, "user1_new");
     db.update_password(userid1, "password1", "password1_new");
 
     try{
-        db.login(user1);
+        db.login("user1", "password1");
     }catch(const std::exception& e){
         cout << e.what() << endl;
     }
@@ -52,7 +49,7 @@ void test_origin() {
     db.delete_user(userid3);
 
     try{
-        userid3 = db.login(user3);
+        userid3 = db.login("user3", "password3");
         cout << "userid3: " << userid3 << endl;
     }catch(const std::exception& e){
         cout << e.what() << endl;
@@ -67,8 +64,8 @@ void test_origin() {
 
     cout << "src1: " << src1.srcname << " " << src1.magnet << " " << src1.owner << endl;
 // src create & get OK
-    db.update_src_name(src1.srcid, "name1_new");
-    db.update_src_magnet(src1.srcid, "magnet1_new");
+    db.update_src_name(src1.ID, "name1_new");
+    db.update_src_magnet(src1.ID, "magnet1_new");
 
     cout << "src1: " << src1.srcname << " " << src1.magnet << " " << src1.owner << endl;
 // src update OK
@@ -93,8 +90,7 @@ void test_origin() {
 
 void test_read(){
     SeedDB db("test");
-    user_t user2 = {"user2", "password2"};
-    auto userid2 = db.login(user2);
+    auto userid2 = db.login("user2", "password2");
     for(auto src : db.get_usr_src_list(userid2)){
         cout << "src: " << src.srcname << " " << src.magnet << " " << src.owner << endl;
     }

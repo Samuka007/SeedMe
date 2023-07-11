@@ -35,7 +35,7 @@ class Pager{
             lseek(*file_descriptor, p_num * page_size, SEEK_SET);
             ssize_t bytes_read = read(*file_descriptor, this, page_size);
             if(bytes_read == -1){
-                throw FileError();
+                // throw FileError();
             }
         }
 
