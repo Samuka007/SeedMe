@@ -43,11 +43,14 @@ class Table{
                 throw FileError(filename.data());
             }
             last_row_num = file_length / sizeof(T);
+            if(last_row_num == 0){
+                get_page(0);
+            }
             //pages = vector<Pager<T>> {nullptr};
         }
 
         inline unsigned last_row(){
-            return last_row_num;
+            return last_row_num - 1;
         }
 
         T& operator[] (unsigned row_num){
@@ -56,15 +59,16 @@ class Table{
             }
             int page_num = row_num / Pager<T>::rows_per_page;
             page_p page = get_page(page_num);
-            unsigned int row_offset = row_num % Pager<T>::rows_per_page - 1;
+            unsigned int row_offset = (row_num + 1) % Pager<T>::rows_per_page - 1;
+            std::cout << "row_offset" << row_offset << std::endl;
             return (*page)[row_offset];
         }
 
-        shared_ptr<Pager<T>> get_page(unsigned page_num){
+        page_p get_page(unsigned page_num){
             //TODO: Check page_num legal?
             if(!pages.contains(page_num)){ //page is not in memory
                 //read page from file
-                shared_ptr<Pager<T>> temp_page = make_shared<Pager<T>>(page_num, file_descriptor);
+                auto temp_page = make_shared<Pager<T>>(page_num, file_descriptor);
                 pages[page_num] = temp_page;
                 // pages.emplace(page_num, temp_page);
                 page_queue.push(temp_page);
@@ -87,8 +91,7 @@ class Table{
                 page_queue.push(new_page);
             }
             // (*pages[last_row_num / Pager<T>::rows_per_page])[last_row_num % Pager<T>::rows_per_page] = row;
-            (*this)[last_row_num] = row;
-            last_row_num += 1;
+            (*this)[++last_row_num] = row;
         }
         
     private:

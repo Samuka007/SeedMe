@@ -53,7 +53,7 @@ class User {
     unsigned addUser(string_view username, string_view password) {
         unsigned id = deleted.get();
         if(id == 0) {
-            id = table.last_row() + 1;
+            id = table.last_row();
             table.new_row(UsrRow {id, username.data(), password.data()});
         } else {
             table[id] = UsrRow {id, username.data(), password.data()};
