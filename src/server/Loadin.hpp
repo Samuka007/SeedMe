@@ -23,19 +23,17 @@ namespace SeedSvr {
             arg.push_back(string(argv[i]));
         }
         string db_name;
-        int change_limit;
-        string sudoer_api;
-        unsigned port;
+        unsigned port = 0;
         bool debug = false;
         for(auto par : arg){
             if (par.starts_with("name=")) {
-                db_name = par.substr(6);
+                db_name = par.substr(5);
             }else if(par.starts_with("max_ram=")) {
-                change_limit = std::stoi(par.substr(9));
+                default_buffer_size = std::stoi(par.substr(8));
             }else if(par.starts_with("sudo=")) {
-                sudoer_api = par.substr(6);
+                sudo_token = par.substr(5);
             }else if(par.starts_with("port=")) {
-                port = std::stoul(par.substr(6));
+                port = std::stoul(par.substr(5));
             }else if(par == "--debug") {
                 debug = true;
             }
@@ -43,12 +41,12 @@ namespace SeedSvr {
         if (db_name.empty()) {
             if (argc > 3) {
                 port = std::stoul(arg[3]);
-                sudoer_api = arg[2];
+                sudo_token = arg[2];
                 default_buffer_size = std::stoi(arg[1]);
                 db_name = arg[0];
             }
             if (argc > 2) {
-                sudoer_api = arg[2];
+                sudo_token = arg[2];
                 default_buffer_size = std::stoi(arg[1]);
                 db_name = arg[0];
             }
@@ -58,6 +56,10 @@ namespace SeedSvr {
             }
             db_name = arg[0];
         }
-        Seedme seed("try");
+        if(port > 1000 || port < 65535) {
+            Seedme seedsvr(db_name, port);
+        }else{
+            Seedme seedsvr(db_name);
+        }
     }
 };

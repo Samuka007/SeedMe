@@ -141,7 +141,7 @@ public:
 
         // Post Tag operation
         // ID and token are needed
-        seedsvr.Post("/post/", [&](const Request& req, Response& res) {
+        seedsvr.Post("/post/tag", [&](const Request& req, Response& res) {
             try{
                 std::cout << req.body << std::endl;
                 auto handle = api::tag_handler(req.body, Database, tokens);

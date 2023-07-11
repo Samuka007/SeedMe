@@ -62,7 +62,7 @@ public:
         if(j.at("operation") == "create")
         {
             int id = db.new_user(
-                string(j.at("name")), MD5(j.at("password")).toStr());
+                string(j.at("username")), MD5(j.at("password")).toStr());
             res.emplace("ID", id);
             res.emplace("token", tk.generate_token(id));
         }
@@ -75,6 +75,7 @@ public:
         }
         if(j.at("operation") == "update")
         {
+            tk.check_token(j.at("token").get<string>(),j.at("ID").get<int>());
             if(j.contains("username")) 
             { db.update_username(j.at("ID").get<int>(), string(j.at("username")) ); }
             if(j.contains("password"))
