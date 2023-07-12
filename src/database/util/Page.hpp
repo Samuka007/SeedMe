@@ -33,16 +33,16 @@ class Pager{
         {
             //read in file
             lseek(*file_descriptor, p_num * page_size, SEEK_SET);
-            ssize_t bytes_read = read(*file_descriptor, this, page_size);
-            if(bytes_read == -1){
-                // throw FileError();
-            }
+            ssize_t bytes_read = read(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
+            // if(bytes_read == -1){
+            //     // throw FileError();
+            // }
         }
 
         virtual ~Pager() {
             //write back to file
             lseek(*file_descriptor, p_num * page_size, SEEK_SET);
-            ssize_t bytes_written = write(*file_descriptor, this, page_size);
+            ssize_t bytes_written = write(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
             // if(bytes_written == -1){
             //     throw FileError();
             // }

@@ -2,6 +2,7 @@
 #define Rows_hpp
 #include <bitset>
 #include <string>
+#include <string_view>
 
 struct source_t {
     unsigned ID; 
@@ -10,38 +11,62 @@ struct source_t {
     unsigned owner;
 };
 
+static constexpr size_t STRING_LENGTH = 128;
+
 struct UsrRow {
-    UsrRow() = default;
-    UsrRow(unsigned _id, const char* _name, const char* _password)
-    :   id{_id} {
-        std::copy(_name, _name + LENGTH_OF_NAME, username);
-        std::copy(_password, _password + LENGTH_OF_PASSWORD, password);
+    explicit UsrRow(unsigned _id, const char* _name, unsigned len1, const char* _pw, unsigned len2)
+    :   id{_id}, username {0}, password {0} 
+    {
+        std::memcpy(username, _name , std::min(len1, STRING_LENGTH));
+        std::memcpy(password, _pw,    std::min(len2, STRING_LENGTH));
     }
-    constexpr static size_t LENGTH_OF_NAME   = 32;
-    constexpr static size_t LENGTH_OF_PASSWORD = 128;
+
+    explicit UsrRow (unsigned _id, const std::string& _name, const std::string& _pw) 
+    :   id{_id}, username {0}, password {0}
+    {
+        std::memcpy(username, _name.c_str(), std::min(_name.length(), STRING_LENGTH));
+        std::memcpy(password, _pw.c_str(),   std::min(_name.length(), STRING_LENGTH));
+    }
+
+    explicit UsrRow (unsigned _id, const std::string_view _name, const std::string_view _pw)
+    :   id{_id}, username {0}, password {0}
+    {
+        std::memcpy(username, _name.data(), std::min(_name.length(), STRING_LENGTH));
+        std::memcpy(password, _pw.data(),   std::min(_name.length(), STRING_LENGTH));
+    }
 
     unsigned    id;
-    char        username[LENGTH_OF_NAME];
-    char        password[LENGTH_OF_PASSWORD];
+    char        username[STRING_LENGTH];
+    char        password[STRING_LENGTH];
+
 };
 
 constexpr size_t SIZE_OF_USRROW = sizeof(UsrRow);
 
 struct SrcRow {
-    SrcRow() = default;
-    SrcRow(unsigned _id, const char* _name, const char* _magnet, unsigned _owner)
-    :   id{_id}, owner{_owner} {
-        std::copy(_name, _name + LENGTH_OF_NAME, name);
-        std::copy(_magnet, _magnet + LENGTH_OF_MAGNET, magnet);
+    explicit SrcRow ( unsigned _id, const char* _name, unsigned len1, const char* _magnet, unsigned len2, unsigned _owner)
+    :   id{_id}, owner{_owner}, name {0}, magnet {0} {
+        std::memcpy(name,   _name ,  std::min(len1, STRING_LENGTH));
+        std::memcpy(magnet, _magnet, std::min(len2, STRING_LENGTH));
     }
 
-    constexpr static size_t LENGTH_OF_NAME   = 64;
-    constexpr static size_t LENGTH_OF_MAGNET = 64;
+    explicit SrcRow ( unsigned _id, const std::string& _name, const std::string& _magnet, unsigned _owner)
+    :   id{_id}, owner{_owner}, name {0}, magnet {0} {
+        std::memcpy(name,   _name.c_str() ,  std::min(_name.length(), STRING_LENGTH));
+        std::memcpy(magnet, _magnet.c_str(), std::min(_magnet.length(), STRING_LENGTH));
+    }
+
+    explicit SrcRow ( unsigned _id, const std::string_view _name, const std::string_view _magnet, unsigned _owner)
+    :   id{_id}, owner{_owner}, name {0}, magnet {0} {
+        std::memcpy(name,   _name.data() ,  std::min(_name.length(), STRING_LENGTH));
+        std::memcpy(magnet, _magnet.data(), std::min(_magnet.length(), STRING_LENGTH));
+    }
 
     unsigned    id;
-    char        name   [LENGTH_OF_NAME];
-    char        magnet [LENGTH_OF_MAGNET];
+    char        name   [STRING_LENGTH];
+    char        magnet [STRING_LENGTH];
     unsigned    owner;
+
 };
 
 constexpr size_t SIZE_OF_SRCROW = sizeof(SrcRow);
