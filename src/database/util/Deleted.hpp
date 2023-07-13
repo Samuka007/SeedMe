@@ -76,7 +76,9 @@ class Deleted{
 
         unsigned int get(){
             if(!deleted_set.empty()){
-                return *deleted_set.begin();
+                unsigned empty_id = *deleted_set.begin();
+                deleted_set.erase(empty_id);
+                return empty_id;
             }else{
                 return 0;
             }

@@ -47,9 +47,9 @@ class Data {
         if (id == 0) {
             id = table.last_row() + 1;
             
-            table.new_row(SrcRow {id, srcname.data(), magnet.data(), owner});
+            table.new_row(SrcRow {id, srcname, magnet, owner});
         } else {
-            table[id] = {id, srcname.data(), magnet.data(), owner};
+            table[id] = SrcRow {id, srcname, magnet, owner};
         }
         return id;
     }

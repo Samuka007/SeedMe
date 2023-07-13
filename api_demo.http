@@ -12,7 +12,7 @@ content-type: application/json
 
 {
     "operation": "create",
-    "username": "test",
+    "username": "test3",
     "password": "password1"
 }
 
@@ -27,7 +27,7 @@ content-type: application/json
 
 {
     "operation": "read",
-    "username": "test",
+    "username": "test2",
     "password": "password1"
 }
 
@@ -82,8 +82,8 @@ content-type: application/json
     "operation": "create",
     "token":"123123",
     "owner":2,
-    "name": "src2",
-    "magnet": "any:??"
+    "name": "srcto4",
+    "magnet": "any4133?"
 }
 
 ###
@@ -93,8 +93,9 @@ content-type: application/json
 
 {
     "operation": "update",
-    "ID":,
-    "token":,
+    "ID":2,
+    "owner": 2,
+    "token":"123123",
     "name": "src_changed",
     "magnet": "something"
 }
@@ -106,8 +107,9 @@ content-type: application/json
 
 {
     "operation": "delete",
-    "ID":,
-    "token":
+    "ID": 1 ,
+    "owner": 2,
+    "token":"123123"
 }
 
 ###
@@ -117,9 +119,9 @@ content-type: application/json
 
 {
     "operation": "create",
-    "ID":,
-    "token": 123123,
-    "name": "src"
+    "ID": 3,
+    "token": "123123",
+    "name": "some"
 }
 
 ###
@@ -129,14 +131,14 @@ content-type: application/json
 
 {
     "operation": "delete",
-    "ID":,
-    "token": 123123,
+    "ID": 3,
+    "token": "123123",
     "name": "src"
 }
 
 ###
 # 11. get srcs by user
-GET http://127.0.0.1:12345/get/user/1
+GET http://127.0.0.1:12345/get/user/2
 
 ###
 # 12. get tag list
@@ -144,7 +146,7 @@ GET http://127.0.0.1:12345/get/taglist
 
 ###
 # 13. get srcs by tag
-GET http://127.0.0.1:12345/get/taglist?=
+GET http://127.0.0.1:12345/get/taglist?tag=src
 
 ###
 # 14. close server

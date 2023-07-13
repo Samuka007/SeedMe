@@ -51,10 +51,10 @@ class SeedDB {
 
         bool username_exist(std::string_view username){
             bool find = false;
-            for(unsigned int i=1;i<this->user.get_last_user();++i){
+            for(unsigned int i=1;i<=this->user.get_last_user();++i){
                 if(user.deleted.contains(i))
                     continue;
-                if(user.table[i].username == username){
+                if( username.compare(user.table[i].username) == 0 ){
                     find = true;
                     break;
                 }
@@ -70,8 +70,8 @@ class SeedDB {
             for(unsigned int id=1; id<=this->user.get_last_user(); ++id){
                 if(user.deleted.contains(id))
                     continue;
-                if(user.table[id].username == username){
-                    if(user.table[id].password == password){
+                if( username.compare(user.table[id].username) == 0 ){// compare rule
+                    if( password.compare(user.table[id].password) == 0 ){
                         return id;
                     }
                 }

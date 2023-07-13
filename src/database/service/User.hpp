@@ -26,7 +26,7 @@ class User {
     }
     
     void setUsername(unsigned id, string_view username) {
-        if (username.size() > UsrRow::LENGTH_OF_NAME) {
+        if (username.size() > STRING_LENGTH) {
             throw std::invalid_argument("Username too long");
         }
         std::strcpy(table[id].username, username.data());
@@ -36,7 +36,7 @@ class User {
         if (password_old != table[id].password) {
             throw PasswordIncorrectError();
         }
-        if (password_new.size() > UsrRow::LENGTH_OF_PASSWORD) {
+        if (password_new.size() > STRING_LENGTH) {
             throw std::invalid_argument("Username too long");
         }
         std::strcpy(table[id].password, password_new.data());
@@ -53,10 +53,10 @@ class User {
     unsigned addUser(string_view username, string_view password) {
         unsigned id = deleted.get();
         if(id == 0) {
-            id = table.last_row();
-            table.new_row(UsrRow {id, username.data(), password.data()});
+            id = table.last_row() + 1;
+            table.new_row(UsrRow {id, username, password});
         } else {
-            table[id] = UsrRow {id, username.data(), password.data()};
+            table[id] = UsrRow {id, username, password};
             deleted.erase(id);
         }
         return id;

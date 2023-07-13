@@ -24,16 +24,23 @@ using std::shared_ptr;
 template <typename T>
 class Pager{
     public:
-        static constexpr int page_size = 4096;
-        static constexpr int class_size = 32;
-        static constexpr int rows_per_page = (page_size-class_size) / sizeof(T);
+        static constexpr unsigned page_size = 4096;
+        static constexpr unsigned meta_size = sizeof(unsigned) * 2;
+        static constexpr unsigned rows_per_page = page_size / sizeof(T);
 
-        Pager(int p, shared_ptr<int> f_d)
-        :p_num(p), file_descriptor(f_d)
+        Pager(unsigned p, shared_ptr<int> f_d)
+        : p_num( p ), file_descriptor( f_d ), rows{}
         {
             //read in file
-            lseek(*file_descriptor, p_num * page_size, SEEK_SET);
-            ssize_t bytes_read = read(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
+            off_t seek_p = lseek(*file_descriptor, p_num * page_size, SEEK_SET);
+            ssize_t bytes_read;
+            unsigned f_p_num;
+            bytes_read = read(*file_descriptor, &f_p_num, sizeof(unsigned));
+            if ( f_p_num != p_num ) {
+                // throw error
+            }
+            bytes_read = read(*file_descriptor, &call_frequency, sizeof(unsigned));
+            bytes_read = read(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
             // if(bytes_read == -1){
             //     // throw FileError();
             // }
@@ -42,18 +49,24 @@ class Pager{
         virtual ~Pager() {
             //write back to file
             lseek(*file_descriptor, p_num * page_size, SEEK_SET);
-            ssize_t bytes_written = write(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
+            ssize_t bytes_written;
+            bytes_written = write(*file_descriptor, &p_num, sizeof(unsigned));
+            bytes_written = write(*file_descriptor, &call_frequency, sizeof(unsigned));
+            bytes_written = write(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
             // if(bytes_written == -1){
             //     throw FileError();
             // }
         }
 
-        T& operator[] (int row_num) {
+        T& operator[] (unsigned row_num) 
+        {
             call_frequency += 1;
             return rows.at(row_num);
         }
 
-        void push_back(T r){
+        // Shouldn't be used
+        void push_back(T r)
+        {
             rows[row_num] = r;
             row_num += 1;
             //what if is full?
@@ -66,7 +79,7 @@ class Pager{
         inline int page_num() { return p_num; }
         
     private:
-        int p_num; //number of page
+        unsigned p_num; //number of page
 
         array<T, rows_per_page> rows;
         

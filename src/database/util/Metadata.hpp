@@ -27,9 +27,9 @@ class Metadata {
     public:
         
         constexpr static unsigned int TAG_LENGTH = 32;
-        constexpr static unsigned int MAX_TAGMAP_NUM = 1023;
-        constexpr static unsigned int SIZE_OF_NAME = sizeof(char[TAG_LENGTH]);
-        constexpr static unsigned int SIZE_OF_LIST = sizeof(int[MAX_TAGMAP_NUM]);
+        constexpr static unsigned int MAX_TAGMAP_NUM = 1016;
+        constexpr static unsigned int SIZE_OF_NAME = sizeof(char[TAG_LENGTH])*sizeof(char);
+        constexpr static unsigned int SIZE_OF_LIST = sizeof(unsigned[MAX_TAGMAP_NUM]);
         constexpr static unsigned int SIZE_OF_TAG = SIZE_OF_NAME + SIZE_OF_LIST;
 
         Metadata(std::string_view _filename)
@@ -116,7 +116,7 @@ class Metadata {
                 }
                 std::array<unsigned int, SIZE_OF_LIST> list {0};
                 std::copy(pair.second.begin(), pair.second.end(), list.begin());
-                rd = read(file_d, list.data(), SIZE_OF_LIST);
+                rd = write(file_d, list.data(), SIZE_OF_LIST);
                 // if(rd == -1){
                 //     throw FileReadError {filename};
                 // }
