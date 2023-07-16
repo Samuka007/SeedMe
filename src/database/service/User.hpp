@@ -18,14 +18,20 @@ class User {
     : table(filename), deleted(filename.data()) {}
 
     const string_view getUsername(unsigned id) {
+        if(isDeleted(id))
+            throw resource_deleted;
         return table[id].username;
     }
 
     const string_view getPassword(unsigned id) {
+        if(isDeleted(id))
+            throw resource_deleted;
         return table[id].password;
     }
     
     void setUsername(unsigned id, string_view username) {
+        if(isDeleted(id))
+            throw resource_deleted;
         if (username.size() > STRING_LENGTH) {
             throw std::invalid_argument("Username too long");
         }
@@ -33,11 +39,13 @@ class User {
     }
 
     void setPassword(unsigned id, string_view password_old, string_view password_new) {
+        if(isDeleted(id))
+            throw resource_deleted;
         if (password_old != table[id].password) {
-            throw PasswordIncorrectError();
+            throw wrong_password;
         }
         if (password_new.size() > STRING_LENGTH) {
-            throw std::invalid_argument("Username too long");
+            throw ;
         }
         std::strcpy(table[id].password, password_new.data());
     }
@@ -60,6 +68,10 @@ class User {
             deleted.erase(id);
         }
         return id;
+    }
+    
+    bool isDeleted(unsigned id) {
+        return deleted.contains(id);
     }
 
     Table<UsrRow> table;

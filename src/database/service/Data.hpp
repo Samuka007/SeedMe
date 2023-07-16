@@ -10,19 +10,25 @@ using std::string_view;
 
 
 class Data {
-    public:
+public:
     Data(string_view filename)
     : table(filename), deleted(filename.data()) {}
 
     inline const string_view getSrcname(const unsigned id) {
+        if(isDeleted(id))
+            throw resource_deleted;
         return table[id].name;
     }
 
     inline const string_view getMagnet(const unsigned id) {
+        if(isDeleted(id))
+            throw resource_deleted;
         return table[id].magnet;
     }
 
     inline const unsigned getOwner(const unsigned id) {
+        if(isDeleted(id))
+            throw resource_deleted;
         return table[id].owner;
     }
 
@@ -31,10 +37,14 @@ class Data {
     }
     
     void setSrcname(unsigned id, const string_view srcname) {
+        if(isDeleted(id))
+            throw resource_deleted;
         std::strcpy(table[id].name, srcname.data());
     }
 
     void setMagnet(unsigned id, const string_view magnet) {
+        if(isDeleted(id))
+            throw resource_deleted;
         std::strcpy(table[id].magnet, magnet.data());
     }
 
@@ -46,20 +56,16 @@ class Data {
         unsigned id = deleted.get();
         if (id == 0) {
             id = table.last_row() + 1;
-            
             table.new_row(SrcRow {id, srcname, magnet, owner});
         } else {
             table[id] = SrcRow {id, srcname, magnet, owner};
+            deleted.erase(id);
         }
         return id;
     }
 
     bool isDeleted(unsigned id) {
         return deleted.contains(id);
-    }
-
-    inline auto last_row() {
-        return table.last_row();
     }
 
     Table<SrcRow> table;

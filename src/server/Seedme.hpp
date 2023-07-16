@@ -11,7 +11,7 @@
 //#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "include/httplib/httplib.h"
 #include "encrypt/TokenHandler.hpp"
-#include "encrypt/md5.h"
+// #include "encrypt/md5.h"
 // #include "server/json/json.hpp"
 #include "util/ErrorHandler.hpp"
 
@@ -51,7 +51,7 @@ public:
             auto srcid = std::stol(req.matches[1]);
             try{
                 json src = Database.get_source(srcid);
-                res.set_content (src.dump() , "application/json");
+                res.set_content(src.dump() , "application/json");
                 res.status = OK;
             }catch(const std::exception& e){
                 res.status = NOT_FOUND;
@@ -73,32 +73,32 @@ public:
             }
         });
 
-        // Get Tag / Get src by tag
-        seedsvr.Get("/get/taglist", [&](const Request& req, Response& res) {
-            if(req.has_param("tag")){
-                try{
-                    json taglist;
-                    for(auto src : Database.get_src_by_tag(req.get_param_value("tag"))){
-                        taglist.emplace_back(json(src));
-                    }
-                    res.set_content ( taglist.dump(), "application/json" );
-                    res.status = OK;
-                }catch(const std::exception& e){
-                    res.status = NOT_FOUND;
-                }
-            }else{
-                try{
-                    json taglist;
-                    for(auto tag : Database.get_tag_list()){
-                        taglist.emplace_back(json(tag));
-                    }
-                    res.set_content ( taglist.dump(), "application/json" );
-                    res.status = OK;
-                }catch(const std::exception& e){
-                    res.status = NOT_FOUND;
-                }
-            }
-        });
+        // // Get Tag / Get src by tag
+        // seedsvr.Get("/get/taglist", [&](const Request& req, Response& res) {
+        //     if(req.has_param("tag")){
+        //         try{
+        //             json taglist;
+        //             for(auto src : Database.get_src_by_tag(req.get_param_value("tag"))){
+        //                 taglist.emplace_back(json(src));
+        //             }
+        //             res.set_content ( taglist.dump(), "application/json" );
+        //             res.status = OK;
+        //         }catch(const std::exception& e){
+        //             res.status = NOT_FOUND;
+        //         }
+        //     }else{
+        //         try{
+        //             json taglist;
+        //             for(auto tag : Database.get_tag_list()){
+        //                 taglist.emplace_back(json(tag));
+        //             }
+        //             res.set_content ( taglist.dump(), "application/json" );
+        //             res.status = OK;
+        //         }catch(const std::exception& e){
+        //             res.status = NOT_FOUND;
+        //         }
+        //     }
+        // });
 
         /**
          * Post methods:
@@ -112,14 +112,9 @@ public:
         //      ("password" and "old_password") are needed
         // if call delete, then id is needed
         seedsvr.Post("/post/user", [&](const Request& req, Response& res) {
-            try{
-                std::cout << req.body << std::endl;
-                auto handle = api::usr_handler(req.body, Database, tokens);
-                res.set_content (handle.dump(), "application/json");
-                res.status = handle.status();
-            }catch(const std::exception& e){
-                res.status = NOT_FOUND;
-            }
+            auto handle = api::usr_handler(req.body, Database, tokens);
+            res.set_content (handle.dump(), "application/json");
+            res.status = handle.status();
         });
         
         // Post Source operation
@@ -129,28 +124,28 @@ public:
         // if call update, then id and name or magnet are needed
         // if call delete, then id is needed
         seedsvr.Post("/post/source", [&](const Request& req, Response& res) {
-            try{
-                std::cout << req.body << std::endl;
                 auto handle = api::src_handler(req.body, Database, tokens);
                 res.set_content (handle.dump(), "application/json");
                 res.status = handle.status();
-            } catch(const std::exception& e) {
-                res.status = NOT_FOUND;
-            }
         });
 
         // Post Tag operation
         // ID and token are needed
-        seedsvr.Post("/post/tag", [&](const Request& req, Response& res) {
-            try{
-                std::cout << req.body << std::endl;
-                auto handle = api::tag_handler(req.body, Database, tokens);
-                res.set_content (handle.dump(), "application/json");
-                res.status = handle.status();
-            } catch(const std::exception& e) {
-                res.status = NOT_FOUND;
-            }
-        });
+        // seedsvr.Post("/post/tag", [&](const Request& req, Response& res) {
+        //     try{
+        //         // std::cout << req.body << std::endl;
+        //         auto handle = api::tag_handler(req.body, Database, tokens);
+        //         res.set_content (handle.dump(), "application/json");
+        //         res.status = handle.status();
+        //     }
+        //     catch(const std::invalid_argument i) {
+        //         json str = i.what();
+        //         res.set_content ( str.dump(), "application/json" );
+        //     }
+        //     catch(const std::exception& e) {
+        //         res.status = NOT_FOUND;
+        //     }
+        // });
 
         seedsvr.Get("/stop", [&](const Request& req, Response& res) {
             seedsvr.stop();

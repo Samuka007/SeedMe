@@ -22,13 +22,13 @@ class SeedDB {
     // change relation ship from "is a" to "has a"
         Data data;
         User user;
-        Metadata metadata;
+        // Metadata metadata;
 
     public:
         SeedDB(std::string filename)
         :   data(filename + ".data"), 
             user(filename + ".user"),
-            metadata(filename + ".meta")
+            // metadata(filename + ".meta")
         {}
         
         // std::vector<unsigned int> find_src_by_name(std::string_view name){
@@ -76,17 +76,23 @@ class SeedDB {
                     }
                 }
             }
-            throw LoginError(username.data());
+            throw login_error;
         }
 
         inline unsigned new_user (string_view username, string_view password) {
             if(username_exist(username)) {
-                throw std::invalid_argument("username already exist");
+                throw invalid_username;
+            }
+            if (username.length() > 127) {
+                throw too_long("Username");
             }
             return user.addUser(username, password);
         }
 
         inline void update_username(unsigned usrid, std::string_view username_new){
+            if (username.length() > 127) {
+                throw too_long("Username");
+            }
             user.setUsername(usrid, username_new);
         }
 
@@ -112,8 +118,8 @@ class SeedDB {
         }
 
         source_t get_source (unsigned srcid) { 
-            if(srcid > data.table.last_row())  { throw SourceNotFoundError {srcid}; }
-            if(data.deleted.contains(srcid))   { throw SourceNotFoundError(srcid); }
+            if(srcid > data.table.last_row())  { throw resource_unfound; }
+            if(data.deleted.contains(srcid))   { throw resource_deleted; }
 
             return source_t {
                 srcid,
@@ -130,7 +136,7 @@ class SeedDB {
         }
 
         void update_src_name ( unsigned int id, std::string_view SrcName ) { 
-            if(data.deleted.contains(id))  { throw SourceNotFoundError {}; }
+            if(data.deleted.contains(id))  { throw resource_deleted; }
             
             std::strcpy(data.table[id].name, SrcName.data());
             metadata.Delete(id);
@@ -138,7 +144,7 @@ class SeedDB {
         }
         
         void update_src_magnet ( unsigned int id, std::string_view SrcMagnet){
-            if(data.deleted.contains(id))  { throw SourceNotFoundError {};}
+            if(data.deleted.contains(id))  { throw resource_deleted;}
 
             data.setMagnet(id, SrcMagnet);
         }
@@ -158,7 +164,7 @@ class SeedDB {
                 }
             }
             if(srcs.empty()){
-                throw SourceNotFoundError {};
+                throw resource_unfound;
             }
             return srcs;
         }
@@ -166,7 +172,11 @@ class SeedDB {
         std::vector<source_t> get_src_by_ids ( const std::vector<unsigned int>& id_list ) {
             std::vector<source_t> srcs;
             for(auto srcid : id_list){
-                srcs.push_back(get_source(srcid));
+                try{ srcs.push_back(get_source(srcid)); }
+                catch(const invalid_resource& e) { continue; }
+            }
+            if (srcs.empty()){
+                throw resource_unfound;
             }
             return srcs;
         }
@@ -175,24 +185,24 @@ class SeedDB {
          * MetadataController:
         */
 
-        inline void add_tag ( std::string_view tag ) {
-            metadata.add_tag(tag.data());
-        }
+        // inline void add_tag ( std::string_view tag ) {
+        //     metadata.add_tag(tag.data());
+        // }
 
-        inline void delete_tag ( std::string_view tag ) {
-            metadata.remove_tag(tag.data());
-        }
+        // inline void delete_tag ( std::string_view tag ) {
+        //     metadata.remove_tag(tag.data());
+        // }
 
-        inline std::vector<std::string> get_tag_list () {
-            return metadata.get_tag_list();
-        }
+        // inline std::vector<std::string> get_tag_list () {
+        //     return metadata.get_tag_list();
+        // }
         
-        inline std::vector<unsigned> get_ids_by_tag ( std::string_view tag ) {
-            return metadata.get_ids_by_tag(tag.data());
-        }
+        // inline std::vector<unsigned> get_ids_by_tag ( std::string_view tag ) {
+        //     return metadata.get_ids_by_tag(tag.data());
+        // }
 
-        inline std::vector<source_t> get_src_by_tag ( std::string_view tag ) {
-            return get_src_by_ids(get_ids_by_tag(tag));
-        }
+        // inline std::vector<source_t> get_src_by_tag ( std::string_view tag ) {
+        //     return get_src_by_ids(get_ids_by_tag(tag));
+        // }
 };
 #endif

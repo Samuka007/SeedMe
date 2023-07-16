@@ -10,7 +10,9 @@
 #include<set>
 #include<array>
 #include<string>
-#include"util/ErrorHandler.hpp"
+#include"util/DatabaseError.hpp"
+
+using std::exception;
 
 constexpr unsigned int LIST_LENGTH = 1024;
 constexpr unsigned int SIZE_OF_LIST = sizeof(unsigned int[LIST_LENGTH]);
@@ -24,20 +26,19 @@ class Deleted{
     
     public:
         Deleted(std::string filename)
-        :   filename(filename) {
-            filename += ".deleted";
+        :   filename(filename + ".deleted") {
             deleted_set.clear();
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
             if(file_d == -1){
-                throw "read error.";
+                throw file_error;
             }
             
             if( lseek(file_d, 0, SEEK_SET) == -1){
-                throw "seek error.";
+                throw file_error;
             } 
             std::array<unsigned int, LIST_LENGTH> buf {0};
             if( read(file_d, buf.data(), SIZE_OF_LIST) == -1){
-                throw "read list error.";
+                throw file_error;
             }
             
             close(file_d);
@@ -46,19 +47,8 @@ class Deleted{
         }
         ~Deleted(){
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT|O_TRUNC, S_IWUSR|S_IRUSR);
-            if(file_d == -1){
-                //throw "read error.";
-            }
-
-            if( lseek(file_d, 0, SEEK_SET) == -1){
-                //throw "seek error.";
-            } 
-
             std::array<unsigned int, LIST_LENGTH> buf {0};
             std::copy(deleted_set.begin(), deleted_set.end(), buf.begin());
-            if( write(file_d, buf.data(), SIZE_OF_LIST) == -1){
-                //throw "write list error.";
-            }
             close(file_d);
         }
 
@@ -75,13 +65,13 @@ class Deleted{
         }
 
         unsigned int get(){
-            if(!deleted_set.empty()){
+            if(!deleted_set.empty())
+            {
                 unsigned empty_id = *deleted_set.begin();
                 deleted_set.erase(empty_id);
                 return empty_id;
-            }else{
-                return 0;
             }
+            else{ return 0; }
         }
 };
 

@@ -14,7 +14,7 @@
 #include <unistd.h> 
 #include <errno.h>
 #include "util/Table.hpp"
-#include "util/ErrorHandler.hpp"
+#include "util/DatabaseError.hpp"
 using std::array;
 using std::shared_ptr;
 
@@ -37,13 +37,13 @@ class Pager{
             unsigned f_p_num;
             bytes_read = read(*file_descriptor, &f_p_num, sizeof(unsigned));
             if ( f_p_num != p_num ) {
-                // throw error
+                throw file_error("Page number not match");
             }
             bytes_read = read(*file_descriptor, &call_frequency, sizeof(unsigned));
             bytes_read = read(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
-            // if(bytes_read == -1){
-            //     // throw FileError();
-            // }
+            if(bytes_read == -1){
+                throw file_error;
+            }
         }
 
         virtual ~Pager() {
@@ -53,9 +53,9 @@ class Pager{
             bytes_written = write(*file_descriptor, &p_num, sizeof(unsigned));
             bytes_written = write(*file_descriptor, &call_frequency, sizeof(unsigned));
             bytes_written = write(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
-            // if(bytes_written == -1){
-            //     throw FileError();
-            // }
+            if(bytes_written == -1){
+                throw file_error;
+            }
         }
 
         T& operator[] (unsigned row_num) 

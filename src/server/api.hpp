@@ -14,6 +14,8 @@ using std::optional;
 
 #include "database/service/SeedDB.hpp"
 #include "encrypt/TokenHandler.hpp"
+#include "util/ErrorHandler.hpp"
+#include "database/util/DatabaseError.hpp"
 #include "encrypt/md5.h"
 
 static void to_json(json& j, const source_t& s)
@@ -28,8 +30,6 @@ namespace api
 {
     // source_t => json
 
-
-
 class response_t
 {
 public:
@@ -37,7 +37,7 @@ public:
     virtual int status() { return 404; }
 };
 
-// static int operation(const string& op)
+// static int method(const string& op)
 // {
 //     if (op == "create") return 1;
 //     if (op == "read" || op == "login")   return 2;
@@ -47,7 +47,7 @@ public:
 // }
 
 /**
- * Available operations:
+ * Available methods:
  * Create | Read | Update | Delete
  * Available entities:
  * username | password | new_password | token
@@ -55,52 +55,79 @@ public:
 class usr_handler : response_t
 {
 public:
-    usr_handler(const string& req, SeedDB& db, TokenHandler& tk)
+    usr_handler(const string& req, SeedDB& db, TokenHandler& tk) 
+    :   status_ { NOT_FOUND }
     {
-        json j = json::parse(req);
-        json res;
-        if(j.at("operation") == "create")
+        try{
+
+        try{
+            json j = json::parse(req);
+        }
+        catch(...){
+            throw invalid_request ( HttpStatus::NOT_ACCEPTABLE );
+        } 
+
+        try {
+        if(j.at("method") == "create")
         {
             int id = db.new_user(
                 string(j.at("username")), MD5(j.at("password")).toStr());
             res.emplace("ID", id);
             res.emplace("token", tk.generate_token(id));
+            status_ = HttpStatus::CREATED;
         }
-        if(j.at("operation") == "read")
+
+        else if(j.at("method") == "read" || j.at("method") == "login")
         {
             int id = db.login(string(j.at("username")), 
                     MD5(j.at("password")).toStr());
             res.emplace("ID", id);
             res.emplace("token", tk.generate_token(id));
+            status_ = HttpStatus::OK;
         }
-        if(j.at("operation") == "update")
+
+        if(j.at("method") == "update")
         {
-            tk.check_token(j.at("token").get<string>(),j.at("ID").get<int>());
+            if(!tk.check_token(j.at("token").get<string>(), j.at("ID").get<int>()))
+            { throw invalid_token; }
             if(j.contains("username")) 
             { db.update_username(j.at("ID").get<int>(), string(j.at("username")) ); }
             if(j.contains("password"))
             { db.update_password(j.at("ID"), 
                 MD5(j.at("old_password")).toStr(), 
                 MD5(j.at("password")).toStr()); }
+            status_ = HttpStatus::ACCEPTED;
         }
-        if (j.at("operation") == "delete")
+
+        else if (j.at("method") == "delete")
         {
             string token = j.at("token");
             int id = j.at("ID").get<int>();
-            tk.check_token(token, id);
+            if(!tk.check_token(token, id))
+            { throw invalid_token }
             tk.remove_token(token);
             db.delete_user(j.at("ID"));
+            status_ = HttpStatus::ACCEPTED;
         }
-        if(!res.empty())
-            body_ = res.dump();
-        status_ = 200;
+
+        else { throw invalid_request {HttpStatus::METHOD_NOT_ALLOWED}; }
+
+        } catch (const database_error& e) {
+            res = e.what();
+            status_ = HttpStatus::BAD_REQUEST;
+        }
+        
+        } catch (const invalid_request& e){
+            res = e.what();
+            status_ = e.status();
+        }
     }
 
-    string dump() { return body_; }
+    string dump() { return res.dump(); }
     int status()  { return status_; }
 
 private:
-    string body_ = "";
+    json res;
     int status_;
 };
 // need to handle any parse error
@@ -110,62 +137,84 @@ class src_handler : response_t
 public:
     src_handler(const string& req, SeedDB& db, TokenHandler& tk)
     {
-        json j = json::parse(req);
-        json res;
-        if(j.at("operation") == "create")
+        try{
+
+        try{
+            json j = json::parse(req);
+        }
+        catch(...){
+            throw invalid_request ( HttpStatus::NOT_ACCEPTABLE );
+        } 
+
+        try {
+        if(j.at("method") == "create")
         {
             tk.check_token(j.at("token"), j.at("owner").get<int>());
             int id = db.create_source(j.at("name").get<string>(), 
                     j.at("magnet").get<string>(), 
                     j.at("owner").get<int>());
             res.emplace("ID", id);
+            status_ = HttpStatus::CREATED;
         }
 
-        if(j.at("operation") == "read")
-        { res = db.get_source(j.at("ID").get<int>()); }
+        else if(j.at("method") == "read")
+        { 
+            res = db.get_source(j.at("ID").get<int>()); 
+            status_ = HttpStatus::OK;
+        }
 
-        if(j.at("operation") == "update")
+        else if(j.at("method") == "update")
         {
             tk.check_token(j.at("token"), j.at("owner").get<int>());
             if(j.contains("name")) 
             { db.update_src_name(j.at("ID").get<int>(), string(j.at("name"))); }
             if(j.contains("magnet"))
             { db.update_src_magnet(j.at("ID").get<int>(), string(j.at("magnet"))); }
+            status_ = HttpStatus::ACCEPTED;
         }
         
-        if(j.at("operation") == "delete")
+        else if(j.at("method") == "delete")
         {
             tk.check_token(j.at("token"), j.at("owner").get<int>());
             db.delete_src(j.at("ID").get<int>());
+            status_ = HttpStatus::ACCEPTED;
         }
+        
+        else { throw invalid_request {HttpStatus::METHOD_NOT_ALLOWED}; }
 
-        if(!res.empty())
-            body_ = res.dump();
-        status_ = 200;
+        } catch (const database_error& e) {
+            res = e.what();
+            status_ = HttpStatus::BAD_REQUEST;
+        }
+        
+        } catch (const invalid_request& e){
+            res = e.what();
+            status_ = e.status();
+        }
     }
 
-    string dump() { return body_; }
+    string dump() { return res.dump(); }
     int status()  { return status_; }
 private:
-    string body_ = "";
+    json res;
     int status_;
 };
 
-class tag_handler : response_t
-{
-public:
-    tag_handler(const string& req, SeedDB& db, TokenHandler& tk)
-    {
-        json j = json::parse(req);
-        tk.check_token(j.at("token"), j.at("ID").get<int>());
-        if(j.at("operation") == "create")
-            db.add_tag(j.at("name").get<string>());
+// class tag_handler : response_t
+// {
+// public:
+//     tag_handler(const string& req, SeedDB& db, TokenHandler& tk)
+//     {
+//         json j = json::parse(req);
+//         tk.check_token(j.at("token"), j.at("ID").get<int>());
+//         if(j.at("method") == "create")
+//             db.add_tag(j.at("name").get<string>());
         
-        if(j.at("operation") == "delete")
-            db.delete_tag(j.at("name").get<string>());
-    }
+//         if(j.at("method") == "delete")
+//             db.delete_tag(j.at("name").get<string>());
+//     }
 
-    string dump() { return {}; }
-    int status()  { return 200; }
-};
+//     string dump() { return {}; }
+//     int status()  { return 200; }
+// };
 }
