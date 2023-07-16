@@ -59,15 +59,8 @@ public:
     :   status_ { NOT_FOUND }
     {
         try{
-
-        try{
-            json j = json::parse(req);
-        }
-        catch(...){
-            throw invalid_request ( HttpStatus::NOT_ACCEPTABLE );
-        } 
-
-        try {
+        
+        json j = json::parse(req);
         if(j.at("method") == "create")
         {
             int id = db.new_user(
@@ -89,7 +82,7 @@ public:
         if(j.at("method") == "update")
         {
             if(!tk.check_token(j.at("token").get<string>(), j.at("ID").get<int>()))
-            { throw invalid_token; }
+            { throw invalid_token(); }
             if(j.contains("username")) 
             { db.update_username(j.at("ID").get<int>(), string(j.at("username")) ); }
             if(j.contains("password"))
@@ -104,7 +97,7 @@ public:
             string token = j.at("token");
             int id = j.at("ID").get<int>();
             if(!tk.check_token(token, id))
-            { throw invalid_token }
+            { throw invalid_token(); }
             tk.remove_token(token);
             db.delete_user(j.at("ID"));
             status_ = HttpStatus::ACCEPTED;
@@ -112,15 +105,19 @@ public:
 
         else { throw invalid_request {HttpStatus::METHOD_NOT_ALLOWED}; }
 
-        } catch (const database_error& e) {
+        } 
+        catch (const database_error& e) {
             res = e.what();
             status_ = HttpStatus::BAD_REQUEST;
         }
-        
-        } catch (const invalid_request& e){
+        catch (const invalid_request& e){
             res = e.what();
             status_ = e.status();
         }
+        catch(...){
+            throw invalid_request ( HttpStatus::NOT_ACCEPTABLE );
+        }
+        
     }
 
     string dump() { return res.dump(); }
@@ -137,16 +134,9 @@ class src_handler : response_t
 public:
     src_handler(const string& req, SeedDB& db, TokenHandler& tk)
     {
-        try{
-
-        try{
-            json j = json::parse(req);
-        }
-        catch(...){
-            throw invalid_request ( HttpStatus::NOT_ACCEPTABLE );
-        } 
-
         try {
+        
+        json j = json::parse(req);
         if(j.at("method") == "create")
         {
             tk.check_token(j.at("token"), j.at("owner").get<int>());
@@ -182,15 +172,18 @@ public:
         
         else { throw invalid_request {HttpStatus::METHOD_NOT_ALLOWED}; }
 
-        } catch (const database_error& e) {
+        }
+        catch (const database_error& e) {
             res = e.what();
             status_ = HttpStatus::BAD_REQUEST;
         }
-        
-        } catch (const invalid_request& e){
+        catch (const invalid_request& e){
             res = e.what();
             status_ = e.status();
         }
+        catch(...) {
+            throw invalid_request ( HttpStatus::NOT_ACCEPTABLE );
+        } 
     }
 
     string dump() { return res.dump(); }

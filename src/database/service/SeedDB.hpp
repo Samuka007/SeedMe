@@ -5,13 +5,16 @@
 #include <string>
 #include <utility>
 #include <tuple>
+#include <regex>
 #include "service/Data.hpp"
 #include "service/User.hpp"
-#include "util/Metadata.hpp"
+// #include "util/Metadata.hpp"
 #include "util/ErrorHandler.hpp"
 
+using std::string;
+using std::regex;
 using std::pair;
-using status = size_t;
+using std::vector;
 
 constexpr unsigned int OK = 200;
 constexpr unsigned int NOT_FOUND = 404;
@@ -27,7 +30,7 @@ class SeedDB {
     public:
         SeedDB(std::string filename)
         :   data(filename + ".data"), 
-            user(filename + ".user"),
+            user(filename + ".user")
             // metadata(filename + ".meta")
         {}
         
@@ -76,12 +79,12 @@ class SeedDB {
                     }
                 }
             }
-            throw login_error;
+            throw login_error();
         }
 
         inline unsigned new_user (string_view username, string_view password) {
             if(username_exist(username)) {
-                throw invalid_username;
+                throw invalid_username();
             }
             if (username.length() > 127) {
                 throw too_long("Username");
@@ -90,7 +93,7 @@ class SeedDB {
         }
 
         inline void update_username(unsigned usrid, std::string_view username_new){
-            if (username.length() > 127) {
+            if (username_new.length() > 127) {
                 throw too_long("Username");
             }
             user.setUsername(usrid, username_new);
@@ -113,72 +116,84 @@ class SeedDB {
                                     std::string_view    SrcMagnet,
                                     unsigned            owner ) {
             unsigned srcid = data.addSrc(SrcName, SrcMagnet, owner);
-            metadata.Log(srcid, SrcName.data());
+            // metadata.Log(srcid, SrcName.data());
             return srcid;
         }
 
-        source_t get_source (unsigned srcid) { 
-            if(srcid > data.table.last_row())  { throw resource_unfound; }
-            if(data.deleted.contains(srcid))   { throw resource_deleted; }
+        source_t get_source (unsigned srcid) const { 
+            if(srcid > data.table.last_row())  { throw resource_unfound(); }
+            if(data.deleted.contains(srcid))   { throw resource_deleted(); }
 
-            return source_t {
-                srcid,
-                data.table[srcid].name,
-                data.table[srcid].magnet,
-                data.table[srcid].owner
-            };
+            return source_t { data.table[srcid] };
         }
 
-        std::vector<source_t> get_sources_by_ids( std::vector<unsigned int> id_list ){
+        std::vector<source_t> get_sources_by_ids( std::vector<unsigned int> id_list ) const{
             std::vector<source_t> srcs;
             for(auto srcid : id_list)   { srcs.push_back(get_source(srcid)); }
             return srcs;
         }
 
         void update_src_name ( unsigned int id, std::string_view SrcName ) { 
-            if(data.deleted.contains(id))  { throw resource_deleted; }
+            if(data.deleted.contains(id))  { throw resource_deleted(); }
             
             std::strcpy(data.table[id].name, SrcName.data());
-            metadata.Delete(id);
-            metadata.Log(id, SrcName.data());
+            // metadata.Delete(id);
+            // metadata.Log(id, SrcName.data());
         }
         
         void update_src_magnet ( unsigned int id, std::string_view SrcMagnet){
-            if(data.deleted.contains(id))  { throw resource_deleted;}
+            if(data.deleted.contains(id))  { throw resource_deleted();}
 
             data.setMagnet(id, SrcMagnet);
         }
 
         void delete_src ( unsigned int id ) {
             data.deleted.insert(id);
-            metadata.Delete(id);
+            // metadata.Delete(id);
         }
 
-        std::vector<source_t> get_usr_src_list( unsigned userid ) {
+        std::vector<source_t> get_usr_src_list( unsigned userid ) const {
             std::vector<source_t> srcs;
             for(unsigned id=1; id <= data.get_last_src(); ++id ){
                 if(data.deleted.contains(id))
                     continue;
-                if( data.table[id].owner == userid ) {
+                if( data.getOwner(id) == userid ) {
                     srcs.push_back(move(get_source(id)));
                 }
             }
             if(srcs.empty()){
-                throw resource_unfound;
+                throw resource_unfound();
             }
             return srcs;
         }
 
-        std::vector<source_t> get_src_by_ids ( const std::vector<unsigned int>& id_list ) {
+        std::vector<source_t> get_src_by_ids ( const std::vector<unsigned int>& id_list ) const {
             std::vector<source_t> srcs;
             for(auto srcid : id_list){
                 try{ srcs.push_back(get_source(srcid)); }
                 catch(const invalid_resource& e) { continue; }
             }
             if (srcs.empty()){
-                throw resource_unfound;
+                throw resource_unfound();
             }
             return srcs;
+        }
+
+        friend auto search ( const SeedDB& db, const string& reg_str )
+        {
+            auto patten = regex(reg_str);
+            vector<source_t> result;
+            for (unsigned iter {0}; iter <= db.data.table.last_row(); ++iter) {
+                try{ 
+                    auto temp = db.get_source(iter); 
+                    if(std::regex_search(temp.srcname, patten)){
+                        result.push_back(temp);
+                    } 
+                }
+                catch(const invalid_resource& e){ continue; }
+            }
+            if (result.empty()) { throw resource_unfound(); }
+            else { return result; }
         }
 
         /**

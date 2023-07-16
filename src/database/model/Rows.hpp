@@ -6,13 +6,6 @@
 #include <string>
 #include <string_view>
 
-struct source_t {
-    unsigned ID; 
-    std::string srcname; 
-    std::string magnet; 
-    unsigned owner;
-};
-
 static constexpr size_t STRING_LENGTH = 128;
 
 struct UsrRow {
@@ -68,6 +61,11 @@ struct SrcRow {
         std::memcpy(magnet, _magnet.data(), std::min(_magnet.length(), STRING_LENGTH));
     }
 
+    unsigned getID()            const { return id;}
+    const char* getSrcname()    const { return name;}
+    const char* getMagnet()     const { return magnet;}
+    unsigned getOwner()         const { return owner;}
+
     unsigned    id;
     char        name   [STRING_LENGTH];
     char        magnet [STRING_LENGTH];
@@ -76,4 +74,19 @@ struct SrcRow {
 };
 
 constexpr size_t SIZE_OF_SRCROW = sizeof(SrcRow);
+
+struct source_t {
+    explicit source_t(const SrcRow& src)
+    :   ID {src.getID()}, 
+        srcname {src.getSrcname()},
+        magnet {src.getMagnet()}, 
+        owner {src.getOwner()}
+        {}
+
+    unsigned ID; 
+    std::string srcname; 
+    std::string magnet; 
+    unsigned owner;
+};
+
 #endif /*Rows_hpp*/

@@ -37,11 +37,11 @@ class Table{
             buffer_page_limit( buffer_size / Pager<T>::page_size )
         {
             if(*file_descriptor == -1){
-                throw FileOpenError(filename.data());
+                throw file_error();
             }
             auto file_length = lseek(*file_descriptor, 0, SEEK_END);
             if(file_length == -1){ 
-                throw FileError(filename.data());
+                throw file_error();
             }
             num_of_row = file_length / Pager<T>::page_size * Pager<T>::rows_per_page;
             if(num_of_row == 0){
@@ -57,7 +57,7 @@ class Table{
             //pages = vector<Pager<T>> {nullptr};
         }
 
-        inline unsigned last_row() { return num_of_row - 1; }
+        inline unsigned last_row() const { return num_of_row - 1; }
 
         T& operator[] (unsigned row_num)
         {
@@ -72,7 +72,20 @@ class Table{
             return (*page)[row_offset];
         }
 
-        page_p get_page(unsigned page_num){
+        T operator[] (unsigned row_num) const
+        {
+            if(row_num + 1 > num_of_row){
+                throw std::out_of_range("Row number out of range");
+            }
+            unsigned page_num = row_num / Pager<T>::rows_per_page;
+            page_p page = get_page( page_num );
+            // offset = row index of page = index of (actual num of row % rows per page)
+            unsigned row_offset = (row_num + 1) % Pager<T>::rows_per_page - 1; 
+            // std::cout << "row_offset" << row_offset << std::endl;
+            return (*page)[row_offset];
+        }
+
+        page_p get_page(unsigned page_num) const {
             //TODO: Check page_num legal?
             if(!pages.contains(page_num)){ //page is not in memory
                 //read page from file
@@ -108,10 +121,10 @@ class Table{
         shared_ptr<int> file_descriptor;
 
         //buffer for pages, sorted by page number
-        map<int, page_p> pages;
+        mutable map<int, page_p> pages;
 
         //buffer list for pages, sorted by call frequency
-        priority_queue<page_p> page_queue;
+        mutable priority_queue<page_p> page_queue;
 
         //unsigned int file_length;
 

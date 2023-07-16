@@ -35,11 +35,11 @@ class invalid_request : public invalid_argument {
         int status() const noexcept { return status_; }
     private:
         int status_;
-}
+};
 
 class invalid_token : public invalid_request {
     public:
-        invalid_token() : invalid_request { "Invalid token.", HttpStatus::UNAUTHORIZED } {}
-}
+        invalid_token() : invalid_request { HttpStatus::UNAUTHORIZED, "Invalid token." } {}
+};
 
 #endif //ErrorHandler.hpp

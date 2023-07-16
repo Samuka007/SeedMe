@@ -30,15 +30,15 @@ class Deleted{
             deleted_set.clear();
             ssize_t file_d = open(filename.data(), O_RDWR|O_CREAT, S_IWUSR|S_IRUSR);
             if(file_d == -1){
-                throw file_error;
+                throw file_error();
             }
             
             if( lseek(file_d, 0, SEEK_SET) == -1){
-                throw file_error;
+                throw file_error();
             } 
             std::array<unsigned int, LIST_LENGTH> buf {0};
             if( read(file_d, buf.data(), SIZE_OF_LIST) == -1){
-                throw file_error;
+                throw file_error();
             }
             
             close(file_d);
@@ -60,7 +60,7 @@ class Deleted{
             return deleted_set.erase(id);
         }
 
-        bool contains(unsigned int id){
+        bool contains(unsigned int id) const {
             return deleted_set.contains(id);
         }
 

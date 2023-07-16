@@ -42,7 +42,7 @@ class Pager{
             bytes_read = read(*file_descriptor, &call_frequency, sizeof(unsigned));
             bytes_read = read(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
             if(bytes_read == -1){
-                throw file_error;
+                throw file_error();
             }
         }
 
@@ -53,9 +53,6 @@ class Pager{
             bytes_written = write(*file_descriptor, &p_num, sizeof(unsigned));
             bytes_written = write(*file_descriptor, &call_frequency, sizeof(unsigned));
             bytes_written = write(*file_descriptor, rows.data(), rows_per_page*sizeof(T));
-            if(bytes_written == -1){
-                throw file_error;
-            }
         }
 
         T& operator[] (unsigned row_num) 

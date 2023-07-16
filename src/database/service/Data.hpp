@@ -14,37 +14,37 @@ public:
     Data(string_view filename)
     : table(filename), deleted(filename.data()) {}
 
-    inline const string_view getSrcname(const unsigned id) {
+    inline string_view getSrcname(const unsigned id) const {
         if(isDeleted(id))
-            throw resource_deleted;
-        return table[id].name;
+            throw resource_deleted();
+        return table[id].getSrcname();
     }
 
-    inline const string_view getMagnet(const unsigned id) {
+    inline string_view getMagnet(const unsigned id) const {
         if(isDeleted(id))
-            throw resource_deleted;
-        return table[id].magnet;
+            throw resource_deleted();
+        return table[id].getMagnet();
     }
 
-    inline const unsigned getOwner(const unsigned id) {
+    inline unsigned getOwner(const unsigned id) const {
         if(isDeleted(id))
-            throw resource_deleted;
-        return table[id].owner;
+            throw resource_deleted();
+        return table[id].getOwner();
     }
 
-    inline unsigned get_last_src() {
+    inline unsigned get_last_src() const {
         return table.last_row();
     }
     
     void setSrcname(unsigned id, const string_view srcname) {
         if(isDeleted(id))
-            throw resource_deleted;
+            throw resource_deleted();
         std::strcpy(table[id].name, srcname.data());
     }
 
     void setMagnet(unsigned id, const string_view magnet) {
         if(isDeleted(id))
-            throw resource_deleted;
+            throw resource_deleted();
         std::strcpy(table[id].magnet, magnet.data());
     }
 
@@ -64,7 +64,7 @@ public:
         return id;
     }
 
-    bool isDeleted(unsigned id) {
+    bool isDeleted(unsigned id) const {
         return deleted.contains(id);
     }
 

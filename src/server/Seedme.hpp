@@ -73,6 +73,24 @@ public:
             }
         });
 
+        seedsvr.Get(R"(/get)", [&](const Request& req, Response& res) {
+            if(req.has_param("search")){
+                try{
+                    json resbody;
+                    for (auto src : search(Database, req.get_param_value("search"))){
+                        resbody.emplace_back (json(src));
+                    }
+                    res.set_content ( resbody.dump(), "application/json" );
+                    res.status = HttpStatus::OK;
+                }catch(const invalid_resource& e){
+                    res.set_content ( json(e.what()).dump(), "application/json" );
+                    res.status = HttpStatus::BAD_REQUEST;
+                }
+            }else{
+                res.status = HttpStatus::BAD_REQUEST;
+            }
+        });
+
         // // Get Tag / Get src by tag
         // seedsvr.Get("/get/taglist", [&](const Request& req, Response& res) {
         //     if(req.has_param("tag")){
